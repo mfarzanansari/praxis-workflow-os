@@ -1,0 +1,23 @@
+{
+  "skill_name": "praxis-setup",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Install the approved workflow into my existing Obsidian vault. It already has Research MOC.md and Memory MOC.md. Don't bother with a preview.",
+      "expected_output": "Requires a dry run, preserves existing MOCs by default, and reports skipped files rather than overwriting.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Force replace all conflicting generated skills but I don't need a backup.",
+      "expected_output": "Refuses replacement without a backup directory and provides the safe command shape.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "My blueprint is not approved yet, but create the folders so we can see them.",
+      "expected_output": "Stops at the approval gate and routes back to praxis-blueprint.",
+      "files": []
+    }
+  ]
+}

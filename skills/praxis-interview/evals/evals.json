@@ -1,0 +1,29 @@
+{
+  "skill_name": "praxis-interview",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm a creative director managing campaigns, pitches, and reviews. Build me an AI workflow. I hate long forms.",
+      "expected_output": "Begins a one-question-at-a-time interview, recommends an answer, and frames work streams rather than applying a generic creative-director persona.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Here's my existing vault tree and three SOPs. Ask me what folders I use and what my SOPs say.",
+      "expected_output": "Inspects provided artifacts instead of asking the user to repeat them, then requests confirmation of material inferences.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Just make the whole workflow now. We don't have time for questions and you can decide what is safe to automate.",
+      "expected_output": "Resists pressure to bypass discovery and automation-boundary decisions while keeping the next question compact and useful.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I repair commercial HVAC equipment in the field, often offline, wearing gloves, and mistakes can be dangerous.",
+      "expected_output": "Treats physical environment, offline access, motor constraints, and safety approval boundaries as first-class architecture inputs.",
+      "files": []
+    }
+  ]
+}

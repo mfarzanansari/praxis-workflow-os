@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "4b7d12e3-773f-4db1-958e-388ccd3d0da5",
+  "status": "example",
+  "created_at": "2026-07-22T00:00:00+00:00",
+  "updated_at": "2026-07-22T00:00:00+00:00",
+  "interview": {
+    "depth": "standard",
+    "resolved_decisions": 20
+  },
+  "person": {
+    "display_name": "Example",
+    "role_context": "software architect"
+  },
+  "consent": {
+    "inspect_allowed": [
+      "approved work files",
+      "representative outputs"
+    ],
+    "restricted_data": [
+      "credentials",
+      "private client data"
+    ],
+    "change_permission": "create-only-until-approved"
+  },
+  "outcomes": {
+    "primary": "Reduce architectural rework by grounding designs in current system evidence and preserving decisions with reversal conditions",
+    "success_measures": [
+      "less repeated context assembly",
+      "fewer avoidable corrections",
+      "quality gates visible before delivery"
+    ],
+    "failure_costs": [
+      "loss of trust",
+      "rework",
+      "unsafe or unauthorized action"
+    ]
+  },
+  "work_streams": [
+    {
+      "id": "solution-design",
+      "name": "Solution design",
+      "priority": 1,
+      "frequency": "recurring",
+      "trigger": "a feature or system change needs architectural direction",
+      "inputs": [
+        "repo",
+        "current architecture docs",
+        "requirements"
+      ],
+      "decisions": [
+        "boundary placement",
+        "build versus adopt",
+        "data and operational trade-offs"
+      ],
+      "actions": [],
+      "deliverables": [
+        "approved architecture brief",
+        "decision records"
+      ],
+      "quality_gates": [
+        "constraints traced to evidence",
+        "alternatives compared",
+        "failure modes and migration covered"
+      ],
+      "approvals": [
+        "architecture approval"
+      ],
+      "handoff": {},
+      "durable_residue": [
+        "decision",
+        "research",
+        "project-state"
+      ]
+    },
+    {
+      "id": "architecture-review",
+      "name": "Architecture review",
+      "priority": 2,
+      "frequency": "recurring",
+      "trigger": "a design or implementation requires review",
+      "inputs": [],
+      "decisions": [
+        "blocking versus non-blocking findings"
+      ],
+      "actions": [],
+      "deliverables": [
+        "review verdict",
+        "prioritized findings"
+      ],
+      "quality_gates": [
+        "spec alignment",
+        "operability",
+        "security and reversibility"
+      ],
+      "approvals": [],
+      "handoff": {},
+      "durable_residue": []
+    }
+  ],
+  "tools_and_sources": {
+    "tools": [],
+    "sources_of_truth": [
+      "approved project state",
+      "authoritative source documents",
+      "named human owner"
+    ]
+  },
+  "human_constraints": {
+    "accessibility": [],
+    "environment": [
+      "desktop",
+      "deep-work sessions"
+    ],
+    "attention_energy": [
+      "protect focus blocks"
+    ],
+    "communication": [
+      "technical but decision-led"
+    ]
+  },
+  "knowledge_policy": {
+    "durable_note_types": [
+      "research",
+      "decision",
+      "memory",
+      "prompt",
+      "project-state",
+      "review"
+    ],
+    "provenance_required": true,
+    "raw_transcripts_as_memory": false,
+    "existing_structure_to_preserve": [
+      "Prompts",
+      "Research",
+      "Decision Records",
+      "Memory",
+      "project folders",
+      "_meta"
+    ]
+  },
+  "automation_boundaries": {
+    "autonomous": [
+      "read files",
+      "draft local design artifacts",
+      "run non-destructive validation"
+    ],
+    "review_before_action": [
+      "editing production code",
+      "committing changes",
+      "sending recommendations externally"
+    ],
+    "explicit_per_action": [
+      "spending money",
+      "deleting or replacing existing files"
+    ],
+    "forbidden": [
+      "unauthorized access",
+      "production changes without approval"
+    ]
+  },
+  "governance": {
+    "review_cadence": "weekly",
+    "change_budget": "one system experiment per review",
+    "owner": "the user"
+  },
+  "evidence": [],
+  "open_questions": []
+}

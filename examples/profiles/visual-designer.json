@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "14bd5af5-874f-4388-bc14-ec6556c20f91",
+  "status": "example",
+  "created_at": "2026-07-22T00:00:00+00:00",
+  "updated_at": "2026-07-22T00:00:00+00:00",
+  "interview": {
+    "depth": "standard",
+    "resolved_decisions": 20
+  },
+  "person": {
+    "display_name": "Example",
+    "role_context": "visual designer"
+  },
+  "consent": {
+    "inspect_allowed": [
+      "approved work files",
+      "representative outputs"
+    ],
+    "restricted_data": [
+      "credentials",
+      "private client data"
+    ],
+    "change_permission": "create-only-until-approved"
+  },
+  "outcomes": {
+    "primary": "Reduce revision cycles by making intent, visual criteria, constraints, and review feedback explicit before production",
+    "success_measures": [
+      "less repeated context assembly",
+      "fewer avoidable corrections",
+      "quality gates visible before delivery"
+    ],
+    "failure_costs": [
+      "loss of trust",
+      "rework",
+      "unsafe or unauthorized action"
+    ]
+  },
+  "work_streams": [
+    {
+      "id": "visual-concept",
+      "name": "Visual concept development",
+      "priority": 1,
+      "frequency": "recurring",
+      "trigger": "a brief needs a visual direction",
+      "inputs": [
+        "brief",
+        "brand system",
+        "reference images"
+      ],
+      "decisions": [
+        "visual metaphor",
+        "hierarchy",
+        "system fit"
+      ],
+      "actions": [],
+      "deliverables": [
+        "concept directions",
+        "design rationale",
+        "review board"
+      ],
+      "quality_gates": [
+        "brief intent visible",
+        "hierarchy and accessibility considered",
+        "alternatives materially distinct"
+      ],
+      "approvals": [
+        "creative lead approval"
+      ],
+      "handoff": {},
+      "durable_residue": [
+        "decision",
+        "memory",
+        "project-state"
+      ]
+    },
+    {
+      "id": "design-review",
+      "name": "Design review",
+      "priority": 2,
+      "frequency": "recurring",
+      "trigger": "a design iteration is ready for critique",
+      "inputs": [],
+      "decisions": [
+        "which issues are structural versus polish"
+      ],
+      "actions": [],
+      "deliverables": [
+        "prioritized critique",
+        "actionable revision plan"
+      ],
+      "quality_gates": [
+        "critique tied to objective",
+        "visual evidence cited",
+        "subjective preference labeled"
+      ],
+      "approvals": [],
+      "handoff": {},
+      "durable_residue": []
+    }
+  ],
+  "tools_and_sources": {
+    "tools": [],
+    "sources_of_truth": [
+      "approved project state",
+      "authoritative source documents",
+      "named human owner"
+    ]
+  },
+  "human_constraints": {
+    "accessibility": [
+      "contrast and readability are mandatory"
+    ],
+    "environment": [
+      "visual desktop workspace"
+    ],
+    "attention_energy": [
+      "separate exploration from convergence"
+    ],
+    "communication": [
+      "show visual evidence when possible"
+    ]
+  },
+  "knowledge_policy": {
+    "durable_note_types": [
+      "research",
+      "decision",
+      "memory",
+      "prompt",
+      "project-state",
+      "review"
+    ],
+    "provenance_required": true,
+    "raw_transcripts_as_memory": false,
+    "existing_structure_to_preserve": [
+      "Prompts",
+      "Research",
+      "Decision Records",
+      "Memory",
+      "project folders",
+      "_meta"
+    ]
+  },
+  "automation_boundaries": {
+    "autonomous": [
+      "organize references",
+      "draft critique",
+      "create local comparison artifacts"
+    ],
+    "review_before_action": [
+      "changing source designs",
+      "sending client-facing work",
+      "publishing"
+    ],
+    "explicit_per_action": [
+      "spending money",
+      "deleting or replacing existing files"
+    ],
+    "forbidden": [
+      "copying protected work as final output",
+      "ignoring accessibility requirements"
+    ]
+  },
+  "governance": {
+    "review_cadence": "weekly",
+    "change_budget": "one system experiment per review",
+    "owner": "the user"
+  },
+  "evidence": [],
+  "open_questions": []
+}

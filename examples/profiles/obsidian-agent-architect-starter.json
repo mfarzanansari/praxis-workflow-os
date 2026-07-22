@@ -1,0 +1,337 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "c2cb7479-a330-4b37-9e7a-f7b2e3b82bac",
+  "status": "starter-inferred-needs-interview",
+  "created_at": "2026-07-22T00:00:00+00:00",
+  "updated_at": "2026-07-22T00:00:00+00:00",
+  "interview": {
+    "depth": "deep",
+    "resolved_decisions": 0
+  },
+  "person": {
+    "display_name": "Vault owner",
+    "role_context": "AI solutions architect / agent workflow designer / product builder"
+  },
+  "consent": {
+    "inspect_allowed": [
+      "approved Obsidian vault structure",
+      "selected prompts",
+      "research notes",
+      "decision records",
+      "memory notes",
+      "project runbooks"
+    ],
+    "restricted_data": [
+      "credentials",
+      "private client data",
+      "unapproved personal information"
+    ],
+    "change_permission": "create-only-until-approved"
+  },
+  "outcomes": {
+    "primary": "Use Obsidian as a durable, human-readable knowledge substrate shared with agents, while improving context assembly, orchestration quality, reusable workflow design, and distilled write-back.",
+    "success_measures": [
+      "less repeated context assembly",
+      "higher-quality worker briefs",
+      "fewer orchestrator corrections",
+      "research and decisions are retrievable across projects",
+      "skills improve through tested evidence"
+    ],
+    "failure_costs": [
+      "vault noise",
+      "stale guidance overriding current truth",
+      "agents acting beyond authority",
+      "loss of important rationale",
+      "bloated skill catalog"
+    ]
+  },
+  "work_streams": [
+    {
+      "id": "research-fleet-synthesis",
+      "name": "Research fleet to defended synthesis",
+      "priority": 1,
+      "frequency": "recurring",
+      "trigger": "a product, architecture, market, prompt, or agent-engineering question requires broad external and internal evidence",
+      "inputs": [
+        "research question",
+        "existing vault notes",
+        "source constraints",
+        "worker outputs"
+      ],
+      "decisions": [
+        "research decomposition",
+        "source authority",
+        "conflict resolution",
+        "what is strong enough to promote into doctrine"
+      ],
+      "actions": [
+        "assemble research brief",
+        "dispatch lenses",
+        "verify evidence",
+        "synthesize defended conclusion"
+      ],
+      "deliverables": [
+        "source-backed research note",
+        "defended recommendation",
+        "open questions and confidence"
+      ],
+      "quality_gates": [
+        "claims trace to sources",
+        "major viewpoints represented",
+        "freshness visible",
+        "inference labeled",
+        "verdict is actionable"
+      ],
+      "approvals": [
+        "owner approves final doctrine or product decision"
+      ],
+      "handoff": {
+        "recipient": "owner and downstream agents"
+      },
+      "durable_residue": [
+        "research",
+        "decision",
+        "memory"
+      ]
+    },
+    {
+      "id": "orchestrator-kickoff",
+      "name": "Orchestrator kickoff and execution control",
+      "priority": 2,
+      "frequency": "recurring",
+      "trigger": "a multi-step product, research, QA, design, or repository task needs coordinated agent execution",
+      "inputs": [
+        "approved objective",
+        "repo or artifact context",
+        "relevant decisions",
+        "workflow doctrine",
+        "acceptance gates"
+      ],
+      "decisions": [
+        "task decomposition",
+        "worker versus orchestrator responsibility",
+        "parallelism",
+        "context boundaries",
+        "verification sequence"
+      ],
+      "actions": [
+        "assemble brief",
+        "route work",
+        "monitor outputs",
+        "integrate and verify"
+      ],
+      "deliverables": [
+        "orchestrator kickoff brief",
+        "worker briefs",
+        "verified integrated output",
+        "finish report"
+      ],
+      "quality_gates": [
+        "brief quality does not degrade",
+        "workers receive bounded context",
+        "orchestrator preserves judgment",
+        "verification happens before completion"
+      ],
+      "approvals": [
+        "owner approves consequential architecture/product changes and external actions"
+      ],
+      "handoff": {
+        "recipient": "workers, owner, or project state"
+      },
+      "durable_residue": [
+        "prompt",
+        "decision",
+        "project-state",
+        "memory"
+      ]
+    },
+    {
+      "id": "skill-prompt-engineering",
+      "name": "Skill and prompt engineering",
+      "priority": 3,
+      "frequency": "recurring",
+      "trigger": "a recurring agent failure, correction, workflow, or deterministic helper deserves reusable packaging",
+      "inputs": [
+        "baseline traces",
+        "existing skills and prompts",
+        "domain evidence",
+        "target client/model constraints"
+      ],
+      "decisions": [
+        "whether a skill is justified",
+        "instruction form",
+        "script versus guidance",
+        "trigger boundary",
+        "release readiness"
+      ],
+      "actions": [
+        "reproduce baseline",
+        "author minimum skill",
+        "run evals",
+        "review outputs",
+        "version and release"
+      ],
+      "deliverables": [
+        "validated skill folder",
+        "eval portfolio",
+        "release notes",
+        "rollback path"
+      ],
+      "quality_gates": [
+        "baseline exists",
+        "held-out tests pass",
+        "near-miss triggers tested",
+        "scripts are safe",
+        "provenance recorded"
+      ],
+      "approvals": [
+        "owner approves released skill behavior"
+      ],
+      "handoff": {
+        "recipient": "personal skill catalog and collaborators"
+      },
+      "durable_residue": [
+        "prompt",
+        "memory",
+        "workflow-review",
+        "decision"
+      ]
+    }
+  ],
+  "tools_and_sources": {
+    "tools": [
+      "Obsidian",
+      "Claude Code or skills-compatible agents",
+      "MCP vault access",
+      "Git/version control",
+      "local scripts"
+    ],
+    "sources_of_truth": [
+      "Decision Records for choices",
+      "Research for evidence",
+      "Memory for reusable doctrine",
+      "Prompts for workflow software",
+      "project folders for current project truth",
+      "_meta for governance"
+    ]
+  },
+  "human_constraints": {
+    "accessibility": [],
+    "environment": [
+      "Windows Obsidian vault",
+      "desktop-first agent workflows"
+    ],
+    "attention_energy": [
+      "prefer compact context assembly and coarse folders"
+    ],
+    "communication": [
+      "architect-level reasoning",
+      "direct recommendations",
+      "evidence and trade-offs visible"
+    ]
+  },
+  "knowledge_policy": {
+    "durable_note_types": [
+      "research",
+      "decision",
+      "memory",
+      "prompt",
+      "project-state",
+      "review"
+    ],
+    "provenance_required": true,
+    "raw_transcripts_as_memory": false,
+    "existing_structure_to_preserve": [
+      "Prompts",
+      "Research",
+      "Decision Records",
+      "Memory",
+      "Spindle/project folders",
+      "_meta",
+      "existing MOCs and backlinks"
+    ]
+  },
+  "automation_boundaries": {
+    "autonomous": [
+      "read approved local vault context",
+      "create non-overwriting draft notes in approved folders",
+      "run local validators and dry-runs",
+      "aggregate non-sensitive workflow metrics"
+    ],
+    "review_before_action": [
+      "edit existing doctrine or decision records",
+      "promote findings into durable memory",
+      "change released skills",
+      "modify repository code",
+      "publish or send external content"
+    ],
+    "explicit_per_action": [
+      "delete, move, rename, or overwrite vault files",
+      "install third-party skills or packages",
+      "use credentials",
+      "spend money or deploy"
+    ],
+    "forbidden": [
+      "store secrets in notes or skill examples",
+      "treat raw transcripts as authoritative memory",
+      "bypass user/system permissions",
+      "silently trust third-party skill scripts"
+    ]
+  },
+  "governance": {
+    "review_cadence": "weekly during rollout, then monthly plus post-project",
+    "change_budget": "one primary workflow experiment per review",
+    "owner": "vault owner"
+  },
+  "evidence": [
+    {
+      "timestamp": "2026-07-22T00:00:00+00:00",
+      "question_id": "seed.vault",
+      "question": "What current architecture is visible?",
+      "path": "knowledge_policy.existing_structure_to_preserve",
+      "state": "inferred",
+      "source": "provided vault tree and Reddit explanation",
+      "confidence": 0.9,
+      "value": [
+        "Prompts",
+        "Research",
+        "Decision Records",
+        "Memory",
+        "project folders",
+        "_meta"
+      ]
+    },
+    {
+      "timestamp": "2026-07-22T00:00:00+00:00",
+      "question_id": "seed.intent",
+      "question": "What appears to be the operating intent?",
+      "path": "outcomes.primary",
+      "state": "inferred",
+      "source": "provided Reddit explanation",
+      "confidence": 0.85,
+      "value": "Obsidian as durable shared knowledge layer for agent workflows"
+    }
+  ],
+  "open_questions": [
+    {
+      "question": "Which one work stream should prove value first?",
+      "recommendation": "Research fleet to defended synthesis, because the vault already contains extensive research and synthesis patterns."
+    },
+    {
+      "question": "Which agent clients and model families must the generated skills support first?",
+      "consequence": "Description triggering, tool names, and eval harness differ by client."
+    },
+    {
+      "question": "What local Rust memory layer interface already exists or is planned?",
+      "consequence": "Determines the boundary between runtime retrieval and curated Obsidian write-back."
+    },
+    {
+      "question": "Which project or client data categories require local-only handling?",
+      "consequence": "Determines script/network permissions and note retention."
+    },
+    {
+      "question": "What correction do you most often make to orchestrators?",
+      "consequence": "Identifies the highest-value first discipline or output-contract test."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "skill_name": "praxis-blueprint",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use this profile to build the complete system now. The profile contains one work stream and says external publishing needs approval.",
+      "expected_output": "Creates an incremental architecture with a publishing gate, starts with the minimum skill graph, and stops for approval before setup.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "My existing Obsidian vault has Prompts, Research, Decision Records, Memory, and project folders. Replace it with PARA and make one mega-skill for marketing.",
+      "expected_output": "Preserves the working taxonomy, explains why title-based mega-skills are weak, and proposes a small graph around actual work streams.",
+      "files": []
+    }
+  ]
+}

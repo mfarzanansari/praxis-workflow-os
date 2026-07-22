@@ -1,0 +1,71 @@
+name: Bug report
+description: Report a reproducible defect in a skill, script, installer, or documented workflow.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove private data, credentials, client content, and sensitive vault paths before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: Praxis version
+      placeholder: v1.0.0 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Host agent/client, operating system, and Python version.
+      placeholder: Claude Code; Windows 11; Python 3.13
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Affected component
+      placeholder: praxis-interview, scaffold_system.py, installer, marketplace...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Exact command or prompt, sanitized inputs, and the smallest steps that reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and logs
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: safety
+    attributes:
+      label: Did this cause data loss, external action, credential exposure, or another security impact?
+      options:
+        - No
+        - Possibly — I have not included sensitive details here
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed private data and credentials.
+          required: true
+        - label: I ran `python scripts/validate_release.py` or explained why I could not.
+          required: true

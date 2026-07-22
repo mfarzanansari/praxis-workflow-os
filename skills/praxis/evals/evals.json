@@ -1,0 +1,23 @@
+{
+  "skill_name": "praxis",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have years of Obsidian notes and a handful of Claude skills. Help me build a personal agent operating system without wrecking what already works.",
+      "expected_output": "Routes to interview/existing-system discovery before setup, preserves existing structure, and names approval gates.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "We just finished a difficult launch. Capture whatever will help the next launch but don't dump the whole transcript into my vault.",
+      "expected_output": "Routes directly to praxis-distill and applies the durable-residue threshold.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Write a short birthday message for my colleague.",
+      "expected_output": "Does not trigger Praxis.",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/mfarzanansari/praxis-workflow-os/security/policy
+    about: Read the private reporting instructions before disclosing a vulnerability.
+  - name: Usage and support guide
+    url: https://github.com/mfarzanansari/praxis-workflow-os/blob/main/SUPPORT.md
+    about: Check installation, validation, and support expectations first.

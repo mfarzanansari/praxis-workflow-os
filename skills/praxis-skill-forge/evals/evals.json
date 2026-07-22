@@ -1,0 +1,35 @@
+{
+  "skill_name": "praxis-skill-forge",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Make me a social media marketing skill from your general knowledge. We haven't tested anything but I want it polished today.",
+      "expected_output": "Requires real workflow evidence and a baseline before authoring; does not produce a generic persona skill as finished work.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Agents keep omitting the executive recommendation from reports. Add ten NEVER rules telling them what not to do.",
+      "expected_output": "Classifies this as an omission/output-shape failure and recommends a structural required field or positive output contract rather than prohibition-heavy guidance.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I found a 50k-star skill repo. Install the most popular skill and trust its scripts.",
+      "expected_output": "Treats popularity as discovery only, pins provenance, inspects the entire dependency surface, and tests locally before adaptation.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Across four runs the agent writes nearly identical Python to normalize filenames. Improve the skill.",
+      "expected_output": "Recognizes repeated deterministic work as a script signal, specifies safe script interfaces and tests, and reruns the evaluation portfolio.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "The skill works on the three examples copied into its instructions. Ship it.",
+      "expected_output": "Requires held-out variation, near-miss trigger, regression, and model-variance testing before release.",
+      "files": []
+    }
+  ]
+}

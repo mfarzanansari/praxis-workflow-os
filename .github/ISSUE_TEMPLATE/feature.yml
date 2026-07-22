@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a compatible capability or improvement grounded in a real workflow need.
+title: "[Feature]: "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Workflow problem
+      description: Describe the recurring situation, current friction, and who experiences it.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Examples, corrections, repeated work, failed outputs, or measurements showing the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired observable outcome
+      description: What should improve, and what must not regress?
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Suggested approach and alternatives
+      description: Include the smallest viable mechanism and trade-offs. A new skill is not always the right answer.
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Likely layer
+      options:
+        - Interview/profile
+        - Blueprint/architecture
+        - Setup/installation
+        - Work execution
+        - Knowledge/distillation
+        - Retrospective/evaluation
+        - Skill authoring/maintenance
+        - Documentation/community
+        - Unsure
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Scope checks
+      options:
+        - label: This is more than a one-off personal customization.
+          required: true
+        - label: I considered whether documentation, a reference, or a script is enough instead of a new skill.
+          required: true

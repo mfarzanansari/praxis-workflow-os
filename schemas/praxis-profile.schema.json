@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/praxis-profile.schema.json",
+  "title": "Praxis Workflow Profile",
+  "type": "object",
+  "required": [
+    "schema_version", "profile_id", "status", "interview", "person", "consent",
+    "outcomes", "work_streams", "tools_and_sources", "human_constraints",
+    "knowledge_policy", "automation_boundaries", "governance", "evidence", "open_questions"
+  ],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "profile_id": {"type": "string", "minLength": 1},
+    "status": {"type": "string"},
+    "interview": {"type": "object"},
+    "person": {"type": "object"},
+    "consent": {"type": "object"},
+    "outcomes": {
+      "type": "object",
+      "required": ["primary"],
+      "properties": {"primary": {"type": "string", "minLength": 1}}
+    },
+    "work_streams": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "trigger", "deliverables", "quality_gates"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "name": {"type": "string", "minLength": 1},
+          "trigger": {"type": "string", "minLength": 1},
+          "deliverables": {"type": "array", "minItems": 1},
+          "quality_gates": {"type": "array", "minItems": 1}
+        }
+      }
+    },
+    "tools_and_sources": {"type": "object"},
+    "human_constraints": {"type": "object"},
+    "knowledge_policy": {"type": "object"},
+    "automation_boundaries": {
+      "type": "object",
+      "required": ["autonomous", "review_before_action", "explicit_per_action", "forbidden"]
+    },
+    "governance": {
+      "type": "object",
+      "required": ["review_cadence"],
+      "properties": {"review_cadence": {"type": "string", "minLength": 1}}
+    },
+    "evidence": {"type": "array"},
+    "open_questions": {"type": "array"}
+  },
+  "additionalProperties": true
+}

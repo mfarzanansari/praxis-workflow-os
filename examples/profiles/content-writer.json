@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "29ca2585-4d18-4092-aa42-c8e8549e42aa",
+  "status": "example",
+  "created_at": "2026-07-22T00:00:00+00:00",
+  "updated_at": "2026-07-22T00:00:00+00:00",
+  "interview": {
+    "depth": "standard",
+    "resolved_decisions": 20
+  },
+  "person": {
+    "display_name": "Example",
+    "role_context": "content writer"
+  },
+  "consent": {
+    "inspect_allowed": [
+      "approved work files",
+      "representative outputs"
+    ],
+    "restricted_data": [
+      "credentials",
+      "private client data"
+    ],
+    "change_permission": "create-only-until-approved"
+  },
+  "outcomes": {
+    "primary": "Produce stronger source-grounded drafts with consistent voice, clear argument, and a reusable editorial learning loop",
+    "success_measures": [
+      "less repeated context assembly",
+      "fewer avoidable corrections",
+      "quality gates visible before delivery"
+    ],
+    "failure_costs": [
+      "loss of trust",
+      "rework",
+      "unsafe or unauthorized action"
+    ]
+  },
+  "work_streams": [
+    {
+      "id": "article-development",
+      "name": "Article development",
+      "priority": 1,
+      "frequency": "recurring",
+      "trigger": "an approved topic, audience, and purpose are available",
+      "inputs": [
+        "brief",
+        "sources",
+        "voice examples"
+      ],
+      "decisions": [
+        "angle",
+        "structure",
+        "evidence threshold"
+      ],
+      "actions": [],
+      "deliverables": [
+        "outline",
+        "draft",
+        "source ledger"
+      ],
+      "quality_gates": [
+        "argument is coherent",
+        "claims sourced",
+        "voice consistent",
+        "reader takeaway clear"
+      ],
+      "approvals": [
+        "editor approval before publication"
+      ],
+      "handoff": {},
+      "durable_residue": [
+        "research",
+        "prompt",
+        "memory"
+      ]
+    },
+    {
+      "id": "editorial-revision",
+      "name": "Editorial revision",
+      "priority": 2,
+      "frequency": "recurring",
+      "trigger": "editor or stakeholder feedback is received",
+      "inputs": [],
+      "decisions": [
+        "which edits improve purpose versus dilute it"
+      ],
+      "actions": [],
+      "deliverables": [
+        "revised draft",
+        "change rationale"
+      ],
+      "quality_gates": [
+        "feedback resolved or challenged explicitly",
+        "no factual regression",
+        "voice preserved"
+      ],
+      "approvals": [],
+      "handoff": {},
+      "durable_residue": []
+    }
+  ],
+  "tools_and_sources": {
+    "tools": [],
+    "sources_of_truth": [
+      "approved project state",
+      "authoritative source documents",
+      "named human owner"
+    ]
+  },
+  "human_constraints": {
+    "accessibility": [],
+    "environment": [
+      "desktop",
+      "offline drafting possible"
+    ],
+    "attention_energy": [
+      "separate drafting from line editing"
+    ],
+    "communication": [
+      "concise editorial rationale"
+    ]
+  },
+  "knowledge_policy": {
+    "durable_note_types": [
+      "research",
+      "decision",
+      "memory",
+      "prompt",
+      "project-state",
+      "review"
+    ],
+    "provenance_required": true,
+    "raw_transcripts_as_memory": false,
+    "existing_structure_to_preserve": [
+      "Prompts",
+      "Research",
+      "Decision Records",
+      "Memory",
+      "project folders",
+      "_meta"
+    ]
+  },
+  "automation_boundaries": {
+    "autonomous": [
+      "organize sources",
+      "draft and revise locally",
+      "run style and consistency checks"
+    ],
+    "review_before_action": [
+      "publishing",
+      "submitting under someone else’s name",
+      "accepting factual changes without verification"
+    ],
+    "explicit_per_action": [
+      "spending money",
+      "deleting or replacing existing files"
+    ],
+    "forbidden": [
+      "fabricated citations",
+      "plagiarism",
+      "undisclosed deceptive authorship"
+    ]
+  },
+  "governance": {
+    "review_cadence": "weekly",
+    "change_budget": "one system experiment per review",
+    "owner": "the user"
+  },
+  "evidence": [],
+  "open_questions": []
+}

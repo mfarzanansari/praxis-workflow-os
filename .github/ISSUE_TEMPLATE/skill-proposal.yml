@@ -1,0 +1,57 @@
+name: Skill proposal
+description: Propose a new skill or a substantial change to an existing skill.
+title: "[Skill]: "
+labels: [skill, evaluation-required, triage]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Proposed skill name
+      placeholder: lowercase-kebab-case
+    validations:
+      required: true
+  - type: textarea
+    id: trigger
+    attributes:
+      label: Trigger boundary
+      description: When should it load, and what near-miss requests must not trigger it?
+    validations:
+      required: true
+  - type: textarea
+    id: baseline
+    attributes:
+      label: Baseline failure
+      description: Show what happens without the skill or with the current version.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Intended behavior or output contract
+    validations:
+      required: true
+  - type: textarea
+    id: evals
+    attributes:
+      label: Proposed evals
+      description: Include representative, edge, missing-information, near-miss, pressure, and regression cases as relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Scripts, permissions, dependencies, network behavior, and provenance
+      description: Write “none” for each category that does not apply.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Readiness
+      options:
+        - label: A recurring need or failing baseline exists.
+          required: true
+        - label: This does not duplicate an existing skill or host primitive.
+          required: true
+        - label: I can help test the proposal on realistic work.
+          required: true

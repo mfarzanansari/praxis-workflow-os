@@ -1,0 +1,218 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Semantic release tag, for example v1.0.0"
+        required: true
+        type: string
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      commit: ${{ steps.version.outputs.commit }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Resolve and verify release identity
+        id: version
+        shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          RELEASE_TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            TAG="$RELEASE_TAG_INPUT"
+          else
+            TAG="$REF_NAME"
+          fi
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag: $TAG" >&2
+            exit 2
+          fi
+
+          VERSION="${TAG#v}"
+          if [[ "$(tr -d '\r\n' < VERSION)" != "$VERSION" ]]; then
+            echo "VERSION file does not match $TAG" >&2
+            exit 3
+          fi
+
+          HEAD_SHA="$(git rev-parse HEAD)"
+          git fetch --no-tags origin "$DEFAULT_BRANCH"
+          MAIN_SHA="$(git rev-parse "origin/$DEFAULT_BRANCH")"
+          if [[ "$HEAD_SHA" != "$MAIN_SHA" ]]; then
+            echo "Release commit $HEAD_SHA is not current $DEFAULT_BRANCH ($MAIN_SHA)." >&2
+            exit 4
+          fi
+
+          if [[ "$EVENT_NAME" != "workflow_dispatch" ]]; then
+            if [[ "$(git cat-file -t "refs/tags/$TAG")" != "tag" ]]; then
+              echo "Release tag $TAG must be annotated." >&2
+              exit 5
+            fi
+            TAG_SHA="$(git rev-parse "refs/tags/$TAG^{commit}")"
+            if [[ "$TAG_SHA" != "$HEAD_SHA" ]]; then
+              echo "Release tag $TAG resolves to $TAG_SHA, not $HEAD_SHA." >&2
+              exit 6
+            fi
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Validate and test
+        run: |
+          python scripts/validate_repository.py --strict
+          python scripts/validate_release.py
+          python -m unittest discover -s tests -v
+          python scripts/build_manifest.py --check
+
+      - name: Build deterministic release assets
+        run: python scripts/build_release.py --clean
+
+      - name: Upload release assets for privileged publish job
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-assets-${{ steps.version.outputs.tag }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout exact validated commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.build.outputs.commit }}
+
+      - name: Download validated release assets
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-assets-${{ needs.build.outputs.tag }}
+          path: dist
+
+      - name: Require successful CI for the exact commit
+        shell: bash
+        env:
+          COMMIT: ${{ needs.build.outputs.commit }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          CI_RUN="$(gh run list \
+            --workflow ci.yml \
+            --commit "$COMMIT" \
+            --status completed \
+            --limit 20 \
+            --json conclusion,headSha,url \
+            --jq '[.[] | select(.conclusion == "success" and .headSha == env.COMMIT)] | first')"
+          if [[ -z "$CI_RUN" || "$CI_RUN" == "null" ]]; then
+            echo "No successful CI run found for $COMMIT." >&2
+            exit 7
+          fi
+          echo "Validated CI run: $CI_RUN"
+
+      - name: Verify main and create or validate annotated tag
+        shell: bash
+        env:
+          COMMIT: ${{ needs.build.outputs.commit }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+          git fetch --no-tags origin "$DEFAULT_BRANCH"
+          MAIN_SHA="$(git rev-parse "origin/$DEFAULT_BRANCH")"
+          if [[ "$MAIN_SHA" != "$COMMIT" ]]; then
+            echo "$DEFAULT_BRANCH moved from validated commit $COMMIT to $MAIN_SHA." >&2
+            exit 8
+          fi
+
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            if [[ "$(git cat-file -t "refs/tags/$TAG")" != "tag" ]]; then
+              echo "Existing tag $TAG is not annotated." >&2
+              exit 9
+            fi
+            TAG_SHA="$(git rev-parse "refs/tags/$TAG^{commit}")"
+            if [[ "$TAG_SHA" != "$COMMIT" ]]; then
+              echo "Existing tag $TAG resolves to $TAG_SHA, not $COMMIT." >&2
+              exit 10
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" "$COMMIT" -m "Praxis Workflow OS $TAG"
+            git push origin "refs/tags/$TAG"
+          fi
+
+      - name: Attest release archives
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: |
+            dist/*.zip
+            dist/*.tar.gz
+
+      - name: Publish GitHub release
+        env:
+          COMMIT: ${{ needs.build.outputs.commit }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.build.outputs.tag }}
+          VERSION: ${{ needs.build.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          NOTES="docs/releases/v${VERSION}.md"
+          if [[ -f "$NOTES" ]]; then
+            gh release create "$TAG" \
+              dist/*.zip dist/*.tar.gz dist/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$COMMIT" \
+              --title "Praxis Workflow OS $TAG" \
+              --notes-file "$NOTES" \
+              --verify-tag
+          else
+            gh release create "$TAG" \
+              dist/*.zip dist/*.tar.gz dist/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$COMMIT" \
+              --title "Praxis Workflow OS $TAG" \
+              --generate-notes \
+              --verify-tag
+          fi
