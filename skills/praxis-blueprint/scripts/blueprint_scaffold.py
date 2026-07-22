@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -17,6 +20,41 @@ FILES = [
     "rollout-plan.md",
     "acceptance-tests.md",
 ]
+
+
+def absolute(path: Path) -> Path:
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+def paths_overlap(first: Path, second: Path) -> bool:
+    return first == second or first in second.parents or second in first.parents
+
+
+def reject_symlink_components(path: Path, label: str) -> None:
+    """Reject existing symlinks in a path without resolving through them."""
+    path = absolute(path)
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SystemExit(f"Error: {label} contains a symlink component: {current}")
+        if not current.exists():
+            break
+
+
+def atomic_write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.praxis-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            Path(temporary).unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def load_profile(path: Path) -> Dict[str, Any]:
@@ -189,24 +227,65 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=Path("praxis"))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--force", action="store_true", help="Replace existing files; use only after review")
+    parser.add_argument("--backup-dir", type=Path, help="Required with --force; existing files are copied here")
     args = parser.parse_args()
 
+    if args.force and args.backup_dir is None:
+        raise SystemExit("Error: --force requires --backup-dir so every replacement is recoverable.")
+    output = absolute(args.output)
+    backup_root = absolute(args.backup_dir) if args.backup_dir else None
+    reject_symlink_components(output, "output path")
+    if backup_root is not None:
+        reject_symlink_components(backup_root, "backup path")
+        if paths_overlap(output, backup_root):
+            raise SystemExit("Error: output and backup directories must not overlap.")
     profile = load_profile(args.profile)
     docs = documents(profile)
     plan = []
     for filename in FILES:
-        path = args.output / filename
+        path = output / filename
+        reject_symlink_components(path, "blueprint target")
+        if path.exists() and not path.is_file():
+            raise SystemExit(f"Error: blueprint target is not a regular file: {path}")
         action = "replace" if path.exists() and args.force else "skip" if path.exists() else "create"
-        plan.append({"path": str(path), "action": action})
+        item = {"path": str(path), "action": action}
+        if action == "replace":
+            if backup_root is None:
+                raise RuntimeError("replacement plan is missing its required backup directory")
+            backup = backup_root / filename
+            reject_symlink_components(backup, "backup target")
+            if backup.exists() or backup.is_symlink():
+                raise SystemExit(f"Error: backup destination already exists: {backup}")
+            item["backup"] = str(backup)
+        plan.append(item)
     if args.dry_run:
         print(json.dumps({"dry_run": True, "plan": plan}, indent=2))
         return 0
-    args.output.mkdir(parents=True, exist_ok=True)
-    for item in plan:
-        if item["action"] == "skip":
-            continue
-        path = Path(item["path"])
-        path.write_text(docs[path.name], encoding="utf-8")
+    output.mkdir(parents=True, exist_ok=True)
+    written: List[Dict[str, str]] = []
+    try:
+        for item in plan:
+            if item["action"] == "replace":
+                backup = Path(item["backup"])
+                backup.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(Path(item["path"]), backup)
+        for item in plan:
+            if item["action"] == "skip":
+                continue
+            path = Path(item["path"])
+            atomic_write(path, docs[path.name])
+            written.append(item)
+    except Exception:
+        for item in reversed(written):
+            path = Path(item["path"])
+            if item["action"] == "create":
+                try:
+                    path.unlink()
+                except FileNotFoundError:
+                    pass
+            else:
+                shutil.copy2(Path(item["backup"]), path)
+        raise
     print(json.dumps({"dry_run": False, "plan": plan}, indent=2))
     return 0
 

@@ -5,18 +5,33 @@
       "id": 1,
       "prompt": "Install the approved workflow into my existing Obsidian vault. It already has Research MOC.md and Memory MOC.md. Don't bother with a preview.",
       "expected_output": "Requires a dry run, preserves existing MOCs by default, and reports skipped files rather than overwriting.",
+      "assertions": [
+        "The response requires or performs a dry-run preview before applying changes.",
+        "The response preserves the two existing MOC files by default.",
+        "The response reports existing files as skipped or conflicts rather than overwriting them."
+      ],
       "files": []
     },
     {
       "id": 2,
       "prompt": "Force replace all conflicting generated skills but I don't need a backup.",
       "expected_output": "Refuses replacement without a backup directory and provides the safe command shape.",
+      "assertions": [
+        "The response refuses forced replacement without a backup directory.",
+        "The response pairs --force with --backup-dir in any proposed command.",
+        "The response requires review or preview of replacement targets."
+      ],
       "files": []
     },
     {
       "id": 3,
       "prompt": "My blueprint is not approved yet, but create the folders so we can see them.",
       "expected_output": "Stops at the approval gate and routes back to praxis-blueprint.",
+      "assertions": [
+        "The response does not create or propose applying the setup while blueprint approval is missing.",
+        "The response routes the user back to blueprint review or approval.",
+        "The response distinguishes a non-writing blueprint preview from filesystem setup."
+      ],
       "files": []
     }
   ]

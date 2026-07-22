@@ -1,6 +1,6 @@
 ---
 name: praxis-blueprint
-description: Use when a completed or sufficiently detailed workflow profile must be converted into an approved personal operating architecture: workflow constitution, work-stream contracts, skill graph, Obsidian knowledge model, automation gates, rollout plan, and acceptance tests. Use before creating folders or installing generated skills.
+description: "Use when a completed or sufficiently detailed workflow profile must be converted into an approved personal operating architecture: workflow constitution, work-stream contracts, skill graph, Obsidian knowledge model, automation gates, rollout plan, and acceptance tests. Use before creating folders or installing generated skills."
 license: MIT
 compatibility: Requires a Praxis profile or equivalent interview findings and file access for blueprint artifacts.
 metadata:
@@ -25,6 +25,14 @@ Prefer:
 - representative inputs, outputs, corrections, and anti-examples.
 
 If the profile is structurally incomplete, return to `praxis-interview` for the single highest-impact gap. Do not invent key risk or quality decisions.
+
+Treat the person's existing folders, note types, skills, and working practices as constraints to preserve, not blank space to redesign. When the available profile is sufficient for a safe partial result, present a bounded first-rollout draft rather than withholding all design work. Label unresolved assumptions, keep the first rollout to the smallest useful work-stream graph, and state explicitly that setup and installation remain blocked until the completed blueprint is approved and its content-hashed approval record exists.
+
+If only one work stream is known, the next response must still sketch an incremental first rollout for that stream: intake, bounded draft, verification, approval where required, and evidence capture. Ask for the single missing fact that most changes this skeleton, but do not replace the skeleton with a refusal or question alone.
+
+If asked to replace a working taxonomy with PARA or another framework, explicitly decline that migration by default. Keep the person's named folders at their existing paths; do not relabel or map them into replacement destinations. Add only missing governance support. Any skill candidates must be several small capabilities derived from observed triggers, decisions, and deliverables; when examples are missing, label the candidates provisional and state what work samples must validate them.
+
+Tie every provisional capability to the evidence that suggested it. Existing `Research`, `Prompts`, `Decision Records`, `Memory`, and project artifacts, for example, support separate evidence, production, decision, distillation, and project-handoff candidates; name that provenance rather than presenting a generic lifecycle list.
 
 ## Architecture rules
 
@@ -71,6 +79,8 @@ Create 2–3 approaches when a genuine architectural choice exists. Typical dime
 
 Lead with the recommendation and explain the trade-off. Do not manufacture alternatives when one option is clearly dictated by constraints.
 
+Prefer several narrow capabilities with explicit handoffs when a proposed general skill would combine distinct triggers, evidence, or output contracts. Preserve the existing knowledge taxonomy by default; propose migration only when its concrete value, cost, and rollback are explicit.
+
 ### 3. Present the design incrementally
 
 Present and obtain approval in this order:
@@ -109,6 +119,18 @@ python scripts/blueprint_scaffold.py \
 ```
 
 The model must then complete and review the content. A generated shell is not an approved architecture.
+
+After the person explicitly approves all seven completed documents, record the exact approved bytes:
+
+```bash
+python scripts/approve_blueprint.py \
+  --profile praxis/profile.json \
+  --blueprint-dir praxis \
+  --approver "Person name" \
+  --confirm-approved
+```
+
+The approval command fails while any blueprint document still contains an unfinished placeholder or the scaffold's draft marker. It creates `praxis/blueprint-approval.json`; any later profile or blueprint change invalidates that record and requires renewed review.
 
 ## Artifact contracts
 
@@ -251,7 +273,7 @@ Before seeking final approval, check:
 
 ## Hard gate
 
-Do not invoke `praxis-setup`, create the vault structure, or install generated skills until the person explicitly approves the written blueprint.
+Do not invoke `praxis-setup`, create the vault structure, or install generated skills until the person explicitly approves the written blueprint and the content-hashed approval record exists.
 
 ## Common mistakes
 

@@ -30,7 +30,6 @@ def parse_frontmatter(text: str) -> Tuple[Dict[str, str], str, List[str]]:
     raw = text[4:end]
     body = text[end + 4:].lstrip("\n")
     fields: Dict[str, str] = {}
-    current_key = None
     for line_no, line in enumerate(raw.splitlines(), start=2):
         if not line.strip() or line.lstrip().startswith("#"):
             continue
@@ -42,13 +41,16 @@ def parse_frontmatter(text: str) -> Tuple[Dict[str, str], str, List[str]]:
         key, value = line.split(":", 1)
         key = key.strip()
         value = value.strip()
-        current_key = key
         if value.startswith(('"', "'")):
             try:
                 parsed = shlex.split(value)
                 value = parsed[0] if parsed else ""
             except ValueError:
                 errors.append(f"frontmatter field {key} has invalid quoting")
+        elif ": " in value:
+            errors.append(
+                f"frontmatter field {key} contains an unquoted colon; quote the YAML scalar"
+            )
         fields[key] = value
     return fields, body, errors
 
@@ -121,6 +123,17 @@ def validate(skill_dir: Path) -> Dict[str, object]:
         if script.suffix in {".sh", ".py"} and not (mode & stat.S_IXUSR):
             warnings.append(f"script is not executable for owner: {script.relative_to(skill_dir)}")
 
+    agent_metadata = skill_dir / "agents/openai.yaml"
+    if not agent_metadata.exists():
+        warnings.append("missing agents/openai.yaml for Codex skill presentation")
+    else:
+        metadata_text = agent_metadata.read_text(encoding="utf-8")
+        for field in ("display_name", "short_description", "default_prompt"):
+            if not re.search(rf"(?m)^\s{{2}}{field}:\s*\S", metadata_text):
+                errors.append(f"agents/openai.yaml missing interface.{field}")
+        if name and f"${name}" not in metadata_text:
+            errors.append("agents/openai.yaml default_prompt must explicitly mention the skill")
+
     eval_path = skill_dir / "evals/evals.json"
     if not eval_path.exists():
         warnings.append("missing evals/evals.json")
@@ -132,11 +145,54 @@ def validate(skill_dir: Path) -> Dict[str, object]:
                 errors.append("evals/evals.json must contain a non-empty evals list")
             if isinstance(data, dict) and data.get("skill_name") not in (None, name):
                 errors.append("evals skill_name does not match frontmatter name")
+            ids = set()
             for index, item in enumerate(evals):
                 if not isinstance(item, dict) or not item.get("prompt") or not item.get("expected_output"):
                     errors.append(f"evals[{index}] needs prompt and expected_output")
+                    continue
+                if item.get("id") in ids:
+                    errors.append(f"evals[{index}] has a duplicate id: {item.get('id')!r}")
+                ids.add(item.get("id"))
+                assertions = item.get("assertions")
+                if (
+                    not isinstance(assertions, list)
+                    or not assertions
+                    or not all(isinstance(value, str) and value.strip() for value in assertions)
+                ):
+                    errors.append(f"evals[{index}] needs a non-empty list of assertion strings")
         except json.JSONDecodeError as exc:
             errors.append(f"invalid evals/evals.json: {exc}")
+
+    trigger_path = skill_dir / "evals/trigger_queries.json"
+    if not trigger_path.exists():
+        warnings.append("missing evals/trigger_queries.json")
+    else:
+        try:
+            queries = json.loads(trigger_path.read_text(encoding="utf-8"))
+            if not isinstance(queries, list) or not 16 <= len(queries) <= 24:
+                errors.append("trigger_queries.json must contain 16-24 labeled queries")
+            else:
+                seen_queries = set()
+                positives = 0
+                negatives = 0
+                for index, item in enumerate(queries):
+                    if not isinstance(item, dict) or not isinstance(item.get("query"), str) or not item["query"].strip():
+                        errors.append(f"trigger_queries[{index}] needs a non-empty query string")
+                        continue
+                    if not isinstance(item.get("should_trigger"), bool):
+                        errors.append(f"trigger_queries[{index}].should_trigger must be boolean")
+                    elif item["should_trigger"]:
+                        positives += 1
+                    else:
+                        negatives += 1
+                    normalized = item["query"].strip().casefold()
+                    if normalized in seen_queries:
+                        errors.append(f"trigger_queries[{index}] duplicates another query")
+                    seen_queries.add(normalized)
+                if positives != negatives:
+                    errors.append("trigger queries must contain equal positive and near-miss-negative cases")
+        except json.JSONDecodeError as exc:
+            errors.append(f"invalid evals/trigger_queries.json: {exc}")
 
     return {
         "valid": not errors,

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -21,8 +22,51 @@ def paths_overlap(first: Path, second: Path) -> bool:
     return first == second or first in second.parents or second in first.parents
 
 
+def absolute(path: Path) -> Path:
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+def reject_symlink_components(path: Path, label: str) -> None:
+    path = absolute(path)
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SystemExit(f"Error: {label} contains a symlink component: {current}")
+        if not current.exists():
+            break
+
+
+def atomic_write(path: Path, text: str) -> None:
+    reject_symlink_components(path, "install report path")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.praxis-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            Path(temporary).unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def reject_symlinks(root: Path, label: str) -> None:
+    """Reject a symlink root or any symlink below it before reading/copying."""
+    if root.is_symlink():
+        raise SystemExit(f"Error: {label} must not be a symlink: {root}")
+    if not root.exists():
+        return
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise SystemExit(f"Error: refusing symlink in {label}: {path}")
+
+
 def stage_skill(source: Path, target: Path) -> tuple[Path, Path]:
     """Copy a skill completely before changing its destination."""
+    reject_symlinks(source, "source skill")
     target.parent.mkdir(parents=True, exist_ok=True)
     staging_root = Path(tempfile.mkdtemp(prefix=f".{target.name}.praxis-", dir=target.parent))
     staged = staging_root / target.name
@@ -46,11 +90,16 @@ def main() -> int:
 
     if args.force and args.backup_dir is None:
         raise SystemExit("Error: --force requires --backup-dir.")
+    reject_symlink_components(args.source, "source skills path")
+    reject_symlink_components(args.target, "target skills path")
+    if args.backup_dir is not None:
+        reject_symlink_components(args.backup_dir, "backup path")
     source_root = args.source.resolve()
     target_root = args.target.resolve()
     backup_root = args.backup_dir.resolve() if args.backup_dir else None
     if not source_root.is_dir():
         raise SystemExit(f"Error: source skills directory not found: {source_root}")
+    reject_symlinks(source_root, "source skills directory")
     if paths_overlap(source_root, target_root):
         raise SystemExit("Error: source and target directories must not overlap.")
     if backup_root is not None:
@@ -76,6 +125,8 @@ def main() -> int:
         target = target_root / source.name
         if target.is_symlink():
             raise SystemExit(f"Error: refusing to replace symlink target: {target}")
+        if target.exists():
+            reject_symlinks(target, "existing target skill")
         action = "replace" if target.exists() and args.force else "skip" if target.exists() else "create"
         plan.append({"skill": source.name, "source": str(source), "target": str(target), "action": action})
 
@@ -99,32 +150,51 @@ def main() -> int:
         return 0
 
     target_root.mkdir(parents=True, exist_ok=True)
-    for item in plan:
-        source = Path(item["source"])
-        target = Path(item["target"])
-        if item["action"] == "skip":
-            item["result"] = "unchanged"
-            continue
-        staging_root, staged = stage_skill(source, target)
-        backup = backup_root / source.name if backup_root is not None else None
-        try:
-            if item["action"] == "replace":
-                assert backup is not None
-                backup.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(target, backup)
-                item["backup"] = str(backup)
+    completed: List[Dict[str, str]] = []
+    try:
+        for item in plan:
+            source = Path(item["source"])
+            target = Path(item["target"])
+            if item["action"] == "skip":
+                item["result"] = "unchanged"
+                continue
+            staging_root, staged = stage_skill(source, target)
+            backup = backup_root / source.name if backup_root is not None else None
+            try:
+                if item["action"] == "replace":
+                    if backup is None:
+                        raise RuntimeError("replacement plan is missing its required backup path")
+                    backup.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(target, backup)
+                    item["backup"] = str(backup)
+                    shutil.rmtree(target)
+                staged.rename(target)
+                item["result"] = "installed"
+                completed.append(item)
+            except Exception:
+                if (
+                    item["action"] == "replace"
+                    and backup is not None
+                    and backup.exists()
+                    and not target.exists()
+                ):
+                    shutil.copytree(backup, target)
+                raise
+            finally:
+                shutil.rmtree(staging_root, ignore_errors=True)
+    except Exception:
+        for item in reversed(completed):
+            target = Path(item["target"])
+            if target.exists():
                 shutil.rmtree(target)
-            staged.rename(target)
-            item["result"] = "installed"
-        except Exception:
-            if item["action"] == "replace" and backup is not None and backup.exists() and not target.exists():
-                shutil.copytree(backup, target)
-            raise
-        finally:
-            shutil.rmtree(staging_root, ignore_errors=True)
+            if item["action"] == "replace":
+                backup = Path(item["backup"])
+                if backup.exists():
+                    shutil.copytree(backup, target)
+        raise
 
     report_path = target_root / "praxis-install-report.json"
-    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    atomic_write(report_path, json.dumps(report, indent=2) + "\n")
     print(json.dumps({
         "status": "complete",
         "report": str(report_path),

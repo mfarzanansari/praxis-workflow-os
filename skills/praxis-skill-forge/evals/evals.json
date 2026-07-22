@@ -5,30 +5,57 @@
       "id": 1,
       "prompt": "Make me a social media marketing skill from your general knowledge. We haven't tested anything but I want it polished today.",
       "expected_output": "Requires real workflow evidence and a baseline before authoring; does not produce a generic persona skill as finished work.",
+      "assertions": [
+        "The response requires concrete workflow evidence or examples before calling the skill finished.",
+        "The response requires a baseline or evaluation portfolio.",
+        "The response does not present a generic social-media persona skill as release-ready."
+      ],
       "files": []
     },
     {
       "id": 2,
       "prompt": "Agents keep omitting the executive recommendation from reports. Add ten NEVER rules telling them what not to do.",
       "expected_output": "Classifies this as an omission/output-shape failure and recommends a structural required field or positive output contract rather than prohibition-heavy guidance.",
+      "assertions": [
+        "The response classifies the problem as an omission or output-structure failure.",
+        "The response recommends a required executive-recommendation field or positive output template.",
+        "The response rejects or de-prioritizes adding ten prohibition rules."
+      ],
       "files": []
     },
     {
       "id": 3,
       "prompt": "I found a 50k-star skill repo. Install the most popular skill and trust its scripts.",
       "expected_output": "Treats popularity as discovery only, pins provenance, inspects the entire dependency surface, and tests locally before adaptation.",
+      "assertions": [
+        "The response states that popularity or stars are not proof of safety or quality.",
+        "The response requires a pinned commit or version plus author and license provenance.",
+        "The response requires inspection of scripts, dependencies, network access, permissions, and destructive behavior before installation.",
+        "The response requires a local evaluation before adoption."
+      ],
       "files": []
     },
     {
       "id": 4,
       "prompt": "Across four runs the agent writes nearly identical Python to normalize filenames. Improve the skill.",
       "expected_output": "Recognizes repeated deterministic work as a script signal, specifies safe script interfaces and tests, and reruns the evaluation portfolio.",
+      "assertions": [
+        "The response recommends bundling the repeated deterministic logic as a script.",
+        "The response specifies a bounded non-interactive interface with help, validation, or dry-run behavior.",
+        "The response requires script tests and rerunning the skill evaluation portfolio."
+      ],
       "files": []
     },
     {
       "id": 5,
       "prompt": "The skill works on the three examples copied into its instructions. Ship it.",
       "expected_output": "Requires held-out variation, near-miss trigger, regression, and model-variance testing before release.",
+      "assertions": [
+        "The response refuses to treat examples copied from the instructions as sufficient release evidence.",
+        "The response requires held-out or realistically varied prompts.",
+        "The response requires near-miss trigger tests and regression checks.",
+        "The response accounts for repeated runs or model variance before release."
+      ],
       "files": []
     }
   ]

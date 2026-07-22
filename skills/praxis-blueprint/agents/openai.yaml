@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis Blueprint"
+  short_description: "Design an approved workflow architecture"
+  default_prompt: "Use $praxis-blueprint to turn my completed profile into an approval-ready workflow architecture."

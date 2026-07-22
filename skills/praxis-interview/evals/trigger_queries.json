@@ -1,0 +1,18 @@
+[
+  {"query": "Interview me about how I actually produce client proposals before suggesting automation.", "should_trigger": true},
+  {"query": "I want a personal workflow OS, but please ask one useful question at a time.", "should_trigger": true},
+  {"query": "Inspect my SOPs and vault tree, infer what you can, then confirm the important gaps with me.", "should_trigger": true},
+  {"query": "Map the recurring work of my field-service job without assuming a technician template.", "should_trigger": true},
+  {"query": "Before we design skills, help me identify outcomes, work streams, and safety boundaries.", "should_trigger": true},
+  {"query": "Resume my incomplete Praxis discovery session from praxis/profile.json.", "should_trigger": true},
+  {"query": "I hate questionnaires; can we discover my workflow conversationally and persist each confirmed decision?", "should_trigger": true},
+  {"query": "Ask me the next consequential question and recommend the likely answer with trade-offs.", "should_trigger": true},
+  {"query": "The profile is complete and approved; turn it into a workflow constitution and skill graph.", "should_trigger": false},
+  {"query": "Install the approved workflow into my Obsidian vault with a dry run.", "should_trigger": false},
+  {"query": "Capture the decision we just made without storing the transcript.", "should_trigger": false},
+  {"query": "Analyze repeated false triggers from the last 30 workflow runs.", "should_trigger": false},
+  {"query": "Create evals for this existing skill before we change its instructions.", "should_trigger": false},
+  {"query": "Interview three job candidates and score their answers.", "should_trigger": false},
+  {"query": "Summarize this customer interview transcript into themes.", "should_trigger": false},
+  {"query": "Draft ten survey questions for market research.", "should_trigger": false}
+]

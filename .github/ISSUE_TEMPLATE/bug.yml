@@ -54,7 +54,7 @@ body:
     attributes:
       label: Did this cause data loss, external action, credential exposure, or another security impact?
       options:
-        - No
+        - "No"
         - Possibly — I have not included sensitive details here
     validations:
       required: true

@@ -1,0 +1,18 @@
+[
+  {"query": "The Praxis profile and blueprint are approved; preview the vault and skill changes.", "should_trigger": true},
+  {"query": "Safely augment my existing Obsidian vault without overwriting its MOCs.", "should_trigger": true},
+  {"query": "Install only the approved personalized skills and show every skipped conflict.", "should_trigger": true},
+  {"query": "Create a new Praxis vault from the approved architecture, starting with a dry run.", "should_trigger": true},
+  {"query": "Apply the setup plan with backups for the two files I approved replacing.", "should_trigger": true},
+  {"query": "Generate the minimum personal-start, finish, weekly-review, and first work-stream skills.", "should_trigger": true},
+  {"query": "Resume a reviewed Praxis installation and preserve all existing user files.", "should_trigger": true},
+  {"query": "Use my completed profile to scaffold the approved vault overlay and validation report.", "should_trigger": true},
+  {"query": "My workflow profile is still incomplete; ask me the next interview question.", "should_trigger": false},
+  {"query": "Draft the skill graph and automation boundaries for approval before setup.", "should_trigger": false},
+  {"query": "The blueprint is not approved, but brainstorm what its folder structure could look like in chat.", "should_trigger": false},
+  {"query": "Install this unrelated npm package globally.", "should_trigger": false},
+  {"query": "Copy a single Agent Skill into ~/.codex/skills.", "should_trigger": false},
+  {"query": "Capture today's workflow lesson in Memory.", "should_trigger": false},
+  {"query": "Analyze why users ignore our weekly review skill.", "should_trigger": false},
+  {"query": "Create a new skill from four failing baseline examples.", "should_trigger": false}
+]

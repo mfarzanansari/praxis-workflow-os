@@ -35,6 +35,8 @@ Prefer, in order:
 
 Do not make consequential system changes from level 7 alone.
 
+Missing evidence blocks a permanent change, not a disciplined learning step. When evidence is thin, leave the system unchanged and propose one explicitly provisional, bounded experiment that can create the missing evidence. It must name the hypothesis, one primary change or observation, success criterion, non-regression condition, and rollback/stop criterion.
+
 ## Inputs
 
 Review a representative period, not only the worst run:

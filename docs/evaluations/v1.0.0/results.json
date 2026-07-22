@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "evaluated_at": "2026-07-22",
+  "client": "codex-cli",
+  "client_version": "0.144.6",
+  "model": "gpt-5.6-terra",
+  "behavior": {
+    "cases": 23,
+    "assertions": 70,
+    "without_skill_passed": 19,
+    "initial_with_skill_passed": 45,
+    "latest_passing_traces": 70,
+    "valid_model_runs": 66,
+    "cumulative_duration_ms": 1653974,
+    "input_tokens": 3773750,
+    "output_tokens": 59891
+  },
+  "trigger": {
+    "queries": 112,
+    "repetitions": 3,
+    "runs": 336,
+    "successful_runs": 336,
+    "passing_runs": 275,
+    "positive_runs": 168,
+    "true_positive_runs": 141,
+    "negative_runs": 168,
+    "true_negative_runs": 134,
+    "cumulative_duration_ms": 8496500,
+    "input_tokens": 20864198,
+    "output_tokens": 293136,
+    "by_skill": {
+      "praxis": {"passing": 44, "runs": 48, "true_positive": 20, "positive": 24, "true_negative": 24, "negative": 24},
+      "praxis-blueprint": {"passing": 40, "runs": 48, "true_positive": 22, "positive": 24, "true_negative": 18, "negative": 24},
+      "praxis-distill": {"passing": 37, "runs": 48, "true_positive": 20, "positive": 24, "true_negative": 17, "negative": 24},
+      "praxis-interview": {"passing": 35, "runs": 48, "true_positive": 21, "positive": 24, "true_negative": 14, "negative": 24},
+      "praxis-retrospective": {"passing": 42, "runs": 48, "true_positive": 22, "positive": 24, "true_negative": 20, "negative": 24},
+      "praxis-setup": {"passing": 41, "runs": 48, "true_positive": 18, "positive": 24, "true_negative": 23, "negative": 24},
+      "praxis-skill-forge": {"passing": 36, "runs": 48, "true_positive": 18, "positive": 24, "true_negative": 18, "negative": 24}
+    }
+  },
+  "known_limits": [
+    "Codex shortened skill descriptions to fit a 2 percent skills-context budget.",
+    "Automatic routing is client, model, catalog, and time dependent.",
+    "Claude model-level evaluation was blocked by organization policy oauth_org_not_allowed.",
+    "Latest passing behavior traces are focused remediation runs, not three full final portfolio repetitions."
+  ]
+}

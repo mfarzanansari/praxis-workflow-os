@@ -27,9 +27,9 @@ python3 scripts/build_manifest.py --check      manifest valid
 python3 scripts/build_release.py --clean        three release files built
 ```
 
-The host has `python3` but no `python` alias. Release audits also found unsafe archive-cleanup and installer-backup edge cases, mutable/outdated action references, insufficient tag-to-artifact binding, and eight executable-bit warnings. All were repaired before publication. The hardened source passes strict validation with zero warnings and 14 unit tests, including destructive-path regressions. Actionlint v1.7.12 also passes both workflows.
+The host has `python3` but no `python` alias. Release audits also found unsafe archive-cleanup and installer-backup edge cases, mutable/outdated action references, insufficient tag-to-artifact binding, and eight executable-bit warnings. All were repaired before publication. The hardened source passes strict validation with zero warnings and 16 unit tests, including destructive-path, cross-platform checkout, and YAML frontmatter regressions. Actionlint v1.7.12 also passes both workflows.
 
-Two independent final builds were byte-identical. The ZIP and tar.gz contained the same 82 files, their checksums verified, and both extracted trees independently passed strict skill validation, release validation, all 14 tests, and manifest verification.
+Two independent pre-push builds were byte-identical. The ZIP and tar.gz contained the same files, their checksums verified, and both extracted trees independently passed strict skill validation, release validation, all tests, and manifest verification.
 
 ## Phases and completion criteria
 
@@ -94,6 +94,8 @@ gh attestation verify <asset> -R mfarzanansari/praxis-workflow-os
 | Release tag and artifacts could diverge | Split build/publish privileges and verify exact commit, main, tag, and prior CI | resolved; actionlint passed |
 | Action major tags were mutable and stale | Pin current reviewed action commits | resolved |
 | Skill scripts emitted executable warnings | Preserve executable modes and enforce strict validation | resolved; zero warnings |
+| First Windows CI job reported a stale manifest | Enforce LF text checkouts with `.gitattributes` and validate the policy | resolved; regression added |
+| Public `skills` CLI discovered only six skills | Quote YAML-sensitive frontmatter and reject unquoted colon scalars | resolved; regression added |
 
 ## Final release evidence
 
@@ -101,6 +103,7 @@ Final public verification is performed during closeout at these stable evidence 
 
 - repository: <https://github.com/mfarzanansari/praxis-workflow-os>
 - CI: <https://github.com/mfarzanansari/praxis-workflow-os/actions/workflows/ci.yml>
+- remediated first CI run: <https://github.com/mfarzanansari/praxis-workflow-os/actions/runs/29879644272>
 - release workflow: <https://github.com/mfarzanansari/praxis-workflow-os/actions/workflows/release.yml>
 - release: <https://github.com/mfarzanansari/praxis-workflow-os/releases/tag/v1.0.0>
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis Distill"
+  short_description: "Preserve only future-useful knowledge"
+  default_prompt: "Use $praxis-distill to preserve only the evidence and decisions that will improve future work."

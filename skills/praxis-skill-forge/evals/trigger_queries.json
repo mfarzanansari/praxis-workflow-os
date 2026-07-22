@@ -1,0 +1,18 @@
+[
+  {"query": "Create an Agent Skill from these repeated workflow failures and baseline outputs.", "should_trigger": true},
+  {"query": "This skill misses the recommendation field; diagnose the failure class and improve it with evals.", "should_trigger": true},
+  {"query": "Package this repeated deterministic filename logic as a safe tested skill script.", "should_trigger": true},
+  {"query": "Audit a third-party skill repo before adapting it into our local workflow.", "should_trigger": true},
+  {"query": "Optimize this skill description using positive and near-miss trigger queries.", "should_trigger": true},
+  {"query": "Version and release this changed skill only if held-out tests improve.", "should_trigger": true},
+  {"query": "Compare the current skill with its prior version and preserve rollback evidence.", "should_trigger": true},
+  {"query": "The agent ignores a safety gate under pressure; choose the right instruction mechanism and test it.", "should_trigger": true},
+  {"query": "Use this installed skill to perform its normal task.", "should_trigger": false},
+  {"query": "Install the approved Praxis workflow into my vault.", "should_trigger": false},
+  {"query": "Interview me about how I currently handle client reviews.", "should_trigger": false},
+  {"query": "Draft the workflow constitution and skill map from my profile.", "should_trigger": false},
+  {"query": "Capture this finished-session decision in a durable note.", "should_trigger": false},
+  {"query": "Review operational metrics and decide which existing skill to remove.", "should_trigger": false},
+  {"query": "Write a Python script to rename these five files once.", "should_trigger": false},
+  {"query": "Find popular skills about marketing and list their star counts.", "should_trigger": false}
+]

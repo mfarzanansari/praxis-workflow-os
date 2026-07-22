@@ -5,7 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
+# subprocess invokes this repository's manifest validator with fixed arguments.
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SKILL_VERSION_RE = re.compile(r"(?m)^[ \t]{2}version:\s*[\"']?([^\"'\s]+)")
 SKILL_AUTHOR_RE = re.compile(r"(?m)^[ \t]{2}author:\s*(.+?)\s*$")
 REQUIRED_FILES = [
+    ".gitattributes",
     "README.md",
     "LICENSE",
     "VERSION",
@@ -32,6 +34,8 @@ REQUIRED_FILES = [
     "RELEASE_RESEARCH.md",
     "SOURCE_PROVENANCE.md",
     "MANIFEST.sha256",
+    ".codex-plugin/plugin.json",
+    ".agents/plugins/marketplace.json",
     ".claude-plugin/marketplace.json",
     ".github/workflows/ci.yml",
     ".github/workflows/release.yml",
@@ -77,6 +81,49 @@ def validate_marketplace(root: Path, version: str, errors: list[str]) -> dict[st
     return data
 
 
+def load_json_object(path: Path, label: str, errors: list[str]) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"invalid {label}: {exc}")
+        return None
+    if not isinstance(data, dict):
+        errors.append(f"invalid {label}: root must be an object")
+        return None
+    return data
+
+
+def validate_codex_distribution(root: Path, version: str, errors: list[str]) -> None:
+    plugin = load_json_object(root / ".codex-plugin/plugin.json", "Codex plugin manifest", errors)
+    if plugin is not None:
+        add(errors, plugin.get("name") == "praxis-workflow-os", "Codex plugin name must be praxis-workflow-os")
+        add(errors, plugin.get("version") == version, "Codex plugin version must match VERSION")
+        add(errors, plugin.get("license") == "MIT", "Codex plugin license must be MIT")
+        add(errors, plugin.get("skills") == "./skills/", "Codex plugin must expose ./skills/")
+        author = plugin.get("author") if isinstance(plugin.get("author"), dict) else {}
+        add(errors, author.get("name") == "Farzan Ansari", "Codex plugin author must identify Farzan Ansari")
+        interface = plugin.get("interface") if isinstance(plugin.get("interface"), dict) else {}
+        for field in ("displayName", "shortDescription", "longDescription", "developerName", "category"):
+            add(errors, isinstance(interface.get(field), str) and bool(interface[field].strip()), f"Codex plugin interface.{field} is required")
+
+    marketplace = load_json_object(
+        root / ".agents/plugins/marketplace.json", "Codex marketplace manifest", errors
+    )
+    if marketplace is not None:
+        add(errors, marketplace.get("name") == "praxis-workflow-os", "Codex marketplace name must be praxis-workflow-os")
+        entries = marketplace.get("plugins")
+        add(errors, isinstance(entries, list) and len(entries) == 1, "Codex marketplace must contain one plugin")
+        if isinstance(entries, list) and entries:
+            entry = entries[0] if isinstance(entries[0], dict) else {}
+            add(errors, entry.get("name") == "praxis-workflow-os", "Codex marketplace plugin name mismatch")
+            source = entry.get("source") if isinstance(entry.get("source"), dict) else {}
+            add(errors, source.get("source") == "local", "Codex marketplace source must be local")
+            add(errors, source.get("path") == "./", "Codex marketplace must point to the repository plugin root")
+            policy = entry.get("policy") if isinstance(entry.get("policy"), dict) else {}
+            add(errors, policy.get("installation") == "AVAILABLE", "Codex plugin must be available for installation")
+            add(errors, policy.get("authentication") == "ON_INSTALL", "Codex plugin authentication policy mismatch")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
@@ -88,6 +135,14 @@ def main() -> int:
 
     for rel in REQUIRED_FILES:
         add(errors, (root / rel).is_file(), f"required release file missing: {rel}")
+
+    attributes_path = root / ".gitattributes"
+    attributes = attributes_path.read_text(encoding="utf-8") if attributes_path.is_file() else ""
+    add(
+        errors,
+        re.search(r"(?m)^\*\s+text=auto\s+eol=lf\s*$", attributes) is not None,
+        ".gitattributes must enforce LF text checkouts for cross-platform manifest stability",
+    )
 
     version_path = root / "VERSION"
     version = version_path.read_text(encoding="utf-8").strip() if version_path.is_file() else ""
@@ -106,6 +161,7 @@ def main() -> int:
         add(errors, author_match is not None and "Farzan Ansari" in author_match.group(1), f"{skill.name}: metadata.author must identify Farzan Ansari")
 
     validate_marketplace(root, version, errors)
+    validate_codex_distribution(root, version, errors)
 
     for workflow_rel in (".github/workflows/ci.yml", ".github/workflows/release.yml"):
         workflow_path = root / workflow_rel
@@ -129,6 +185,9 @@ def main() -> int:
             "gh run list": "successful-CI verification",
             "needs.build.outputs.commit": "validated commit binding",
             "actions/upload-artifact@": "build/publish privilege split",
+            "concurrency:": "per-tag release serialization",
+            "--draft": "draft-first immutable release publication",
+            "gh release download": "release asset reconciliation",
         }
         for marker, purpose in safety_markers.items():
             add(errors, marker in release_workflow, f"release workflow missing {purpose}")
@@ -161,7 +220,9 @@ def main() -> int:
         add(errors, not forbidden, "generated/cache files included in manifest: " + ", ".join(forbidden[:10]))
 
     if not args.skip_manifest and (root / "scripts/build_manifest.py").is_file():
-        result = subprocess.run(
+        # sys.executable and the checked-in script path are controlled by this process.
+        result = subprocess.run(  # nosec B603
+            # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args.dangerous-subprocess-use-tainted-env-args
             [sys.executable, str(root / "scripts/build_manifest.py"), "--root", str(root), "--check"],
             text=True,
             capture_output=True,

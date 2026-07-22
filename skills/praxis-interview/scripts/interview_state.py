@@ -16,8 +16,11 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
+import shutil
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List
@@ -27,11 +30,53 @@ VALID_DEPTHS = {"quick", "standard", "deep"}
 VALID_STATES = {"confirmed", "inferred", "deferred", "disputed"}
 
 
+def absolute(path: Path) -> Path:
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+def paths_overlap(first: Path, second: Path) -> bool:
+    return first == second or first in second.parents or second in first.parents
+
+
+def reject_symlink_components(path: Path, label: str) -> None:
+    path = absolute(path)
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SystemExit(f"Error: {label} contains a symlink component: {current}")
+        if not current.exists():
+            break
+
+
+def workspace_path(value: str) -> Path:
+    workspace = absolute(Path(value))
+    reject_symlink_components(workspace, "workspace path")
+    return workspace
+
+
+def atomic_write(path: Path, text: str) -> None:
+    reject_symlink_components(path, "output path")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.praxis-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            Path(temporary).unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
 def now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 
 
 def load_json(path: Path) -> Dict[str, Any]:
+    reject_symlink_components(path, "profile path")
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -41,10 +86,7 @@ def load_json(path: Path) -> Dict[str, Any]:
 
 
 def save_json(path: Path, data: Dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    atomic_write(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
 
 def parse_value(raw: str) -> Any:
@@ -134,18 +176,52 @@ def base_profile(depth: str, person_name: str | None) -> Dict[str, Any]:
 
 
 def cmd_start(args: argparse.Namespace) -> int:
-    workspace = Path(args.workspace)
+    workspace = workspace_path(args.workspace)
     profile_path = workspace / "profile.json"
-    if profile_path.exists() and not args.force:
+    events_path = workspace / "events.jsonl"
+    existing = [path for path in (profile_path, events_path) if path.exists() or path.is_symlink()]
+    if existing and not args.force:
         raise SystemExit(
-            f"Error: {profile_path} already exists. Use a different workspace or --force to replace it."
+            f"Error: {existing[0]} already exists. Use a different workspace or --force with --backup-dir."
         )
+    if args.force and args.backup_dir is None:
+        raise SystemExit("Error: --force requires --backup-dir so prior interview state is recoverable.")
     if args.depth not in VALID_DEPTHS:
         raise SystemExit(f"Error: --depth must be one of: {', '.join(sorted(VALID_DEPTHS))}.")
+    for path in existing:
+        reject_symlink_components(path, "interview state")
+        if not path.is_file():
+            raise SystemExit(f"Error: interview state path is not a regular file: {path}")
+    backup_root = absolute(args.backup_dir) if args.backup_dir else None
+    backups: Dict[Path, Path] = {}
+    if backup_root is not None:
+        reject_symlink_components(backup_root, "backup path")
+        if paths_overlap(workspace, backup_root):
+            raise SystemExit("Error: workspace and backup directories must not overlap.")
+        for path in existing:
+            backup = backup_root / path.name
+            reject_symlink_components(backup, "backup target")
+            if backup.exists() or backup.is_symlink():
+                raise SystemExit(f"Error: backup destination already exists: {backup}")
+            backups[path] = backup
     workspace.mkdir(parents=True, exist_ok=True)
     profile = base_profile(args.depth, args.person_name)
-    save_json(profile_path, profile)
-    (workspace / "events.jsonl").write_text("", encoding="utf-8")
+    for original, backup in backups.items():
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(original, backup)
+    try:
+        save_json(profile_path, profile)
+        atomic_write(events_path, "")
+    except Exception:
+        for path in (profile_path, events_path):
+            if path in backups:
+                shutil.copy2(backups[path], path)
+            elif path not in existing:
+                try:
+                    path.unlink()
+                except FileNotFoundError:
+                    pass
+        raise
     print(json.dumps({"status": "started", "profile": str(profile_path), "depth": args.depth}))
     return 0
 
@@ -153,7 +229,7 @@ def cmd_start(args: argparse.Namespace) -> int:
 def cmd_record(args: argparse.Namespace, append: bool = False) -> int:
     if args.state not in VALID_STATES:
         raise SystemExit(f"Error: --state must be one of: {', '.join(sorted(VALID_STATES))}.")
-    workspace = Path(args.workspace)
+    workspace = workspace_path(args.workspace)
     path = workspace / "profile.json"
     profile = load_json(path)
     value = parse_value(args.value)
@@ -174,7 +250,6 @@ def cmd_record(args: argparse.Namespace, append: bool = False) -> int:
         profile.setdefault("interview", {}).setdefault("resolved_decisions", 0)
         profile["interview"]["resolved_decisions"] += 1
     profile["updated_at"] = now_iso()
-    save_json(path, profile)
     event = {
         "event": "append" if append else "record",
         "timestamp": profile["updated_at"],
@@ -182,8 +257,22 @@ def cmd_record(args: argparse.Namespace, append: bool = False) -> int:
         "state": args.state,
         "value": value,
     }
-    with (workspace / "events.jsonl").open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+    events_path = workspace / "events.jsonl"
+    reject_symlink_components(events_path, "event log")
+    try:
+        previous_events = events_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        previous_events = ""
+    if events_path.exists() and not events_path.is_file():
+        raise SystemExit(f"Error: event log is not a regular file: {events_path}")
+    next_events = previous_events + json.dumps(event, ensure_ascii=False) + "\n"
+    atomic_write(events_path, next_events)
+    try:
+        save_json(path, profile)
+    except Exception:
+        # Keep profile and event log logically consistent if the second replace fails.
+        atomic_write(events_path, previous_events)
+        raise
     print(json.dumps({"status": "recorded", "path": args.path, "state": args.state}))
     return 0
 
@@ -217,7 +306,7 @@ def validation_errors(profile: Dict[str, Any]) -> List[str]:
 
 
 def cmd_status(args: argparse.Namespace) -> int:
-    profile = load_json(Path(args.workspace) / "profile.json")
+    profile = load_json(workspace_path(args.workspace) / "profile.json")
     states: Dict[str, int] = {state: 0 for state in VALID_STATES}
     for item in profile.get("evidence", []):
         state = item.get("state")
@@ -237,7 +326,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def cmd_complete(args: argparse.Namespace) -> int:
-    path = Path(args.workspace) / "profile.json"
+    path = workspace_path(args.workspace) / "profile.json"
     profile = load_json(path)
     errors = validation_errors(profile)
     if errors and not args.allow_incomplete:
@@ -265,7 +354,7 @@ def md_list(items: Any) -> List[str]:
 
 
 def cmd_export(args: argparse.Namespace) -> int:
-    workspace = Path(args.workspace)
+    workspace = workspace_path(args.workspace)
     profile = load_json(workspace / "profile.json")
     summary = [
         "# Praxis Interview Summary",
@@ -300,7 +389,7 @@ def cmd_export(args: argparse.Namespace) -> int:
         "Use `praxis-blueprint` after the person confirms this summary.",
         "",
     ]
-    (workspace / "interview-summary.md").write_text("\n".join(summary), encoding="utf-8")
+    atomic_write(workspace / "interview-summary.md", "\n".join(summary))
     open_questions = ["# Open Questions", ""]
     if profile.get("open_questions"):
         for item in profile["open_questions"]:
@@ -308,7 +397,7 @@ def cmd_export(args: argparse.Namespace) -> int:
     else:
         open_questions.append("- None recorded.")
     open_questions.append("")
-    (workspace / "open-questions.md").write_text("\n".join(open_questions), encoding="utf-8")
+    atomic_write(workspace / "open-questions.md", "\n".join(open_questions))
     print(json.dumps({
         "status": "exported",
         "files": [str(workspace / "interview-summary.md"), str(workspace / "open-questions.md")]
@@ -336,6 +425,7 @@ def build_parser() -> argparse.ArgumentParser:
     start.add_argument("--depth", choices=sorted(VALID_DEPTHS), default="standard")
     start.add_argument("--person-name")
     start.add_argument("--force", action="store_true")
+    start.add_argument("--backup-dir", type=Path)
     start.set_defaults(func=cmd_start)
 
     record = sub.add_parser("record", help="Set a value at a dotted path")

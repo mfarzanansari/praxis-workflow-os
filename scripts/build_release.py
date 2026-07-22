@@ -5,8 +5,13 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import os
+import shutil
 import stat
+# subprocess is limited to a resolved Git executable with a fixed argument list.
+import subprocess  # nosec B404
 import tarfile
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Iterable
@@ -37,13 +42,42 @@ def version_from(root: Path) -> str:
 
 
 def source_files(root: Path) -> Iterable[Path]:
+    if (root / ".git").exists():
+        git = shutil.which("git")
+        if git is None:
+            raise RuntimeError("git is required to validate untracked release files")
+        # The executable is absolute, the argument list is fixed, and shell remains disabled.
+        result = subprocess.run(  # nosec B603
+            [git, "-C", str(root), "ls-files", "--others", "--exclude-standard", "-z"],
+            check=True,
+            capture_output=True,
+        )
+        unexpected = []
+        for raw in result.stdout.split(b"\0"):
+            if not raw:
+                continue
+            rel = Path(raw.decode("utf-8", errors="strict"))
+            if (
+                any(part in EXCLUDED_PARTS for part in rel.parts)
+                or rel.name in EXCLUDED_NAMES
+                or rel.suffix in EXCLUDED_SUFFIXES
+            ):
+                continue
+            unexpected.append(rel.as_posix())
+        if unexpected:
+            raise ValueError(
+                "untracked release file(s) found; add, ignore, or remove them first: "
+                + ", ".join(sorted(unexpected))
+            )
     for path in sorted(root.rglob("*")):
-        if not path.is_file():
-            continue
         rel = path.relative_to(root)
         if any(part in EXCLUDED_PARTS for part in rel.parts):
             continue
         if path.name in EXCLUDED_NAMES or path.suffix in EXCLUDED_SUFFIXES:
+            continue
+        if path.is_symlink():
+            raise ValueError(f"refusing symlink in release source: {rel.as_posix()}")
+        if not path.is_file():
             continue
         yield path
 
@@ -52,10 +86,10 @@ def archive_prefix(version: str) -> str:
     return f"praxis-workflow-os-v{version}"
 
 
-def build_zip(root: Path, output: Path, version: str) -> None:
+def build_zip(root: Path, output: Path, version: str, files: Iterable[Path]) -> None:
     prefix = archive_prefix(version)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for path in source_files(root):
+        for path in files:
             rel = path.relative_to(root).as_posix()
             info = zipfile.ZipInfo(f"{prefix}/{rel}", date_time=ZIP_DATE)
             info.create_system = 3
@@ -66,12 +100,12 @@ def build_zip(root: Path, output: Path, version: str) -> None:
             archive.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
 
 
-def build_tar_gz(root: Path, output: Path, version: str) -> None:
+def build_tar_gz(root: Path, output: Path, version: str, files: Iterable[Path]) -> None:
     prefix = archive_prefix(version)
     with output.open("wb") as raw:
         with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=9) as gz:
             with tarfile.open(fileobj=gz, mode="w", format=tarfile.PAX_FORMAT) as archive:
-                for path in source_files(root):
+                for path in files:
                     rel = path.relative_to(root).as_posix()
                     info = archive.gettarinfo(str(path), arcname=f"{prefix}/{rel}")
                     info.uid = 0
@@ -119,7 +153,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--dist", type=Path)
-    parser.add_argument("--clean", action="store_true", help="Remove the output directory before building")
+    parser.add_argument("--clean", action="store_true", help="Replace only release-owned output files")
     args = parser.parse_args()
 
     root = args.root.resolve()
@@ -127,21 +161,35 @@ def main() -> int:
     version = version_from(root)
     validate_dist_path(root, dist)
     stem = archive_prefix(version)
-    if args.clean and dist.exists():
-        clean_known_outputs(dist, stem)
+    files = list(source_files(root))
     dist.mkdir(parents=True, exist_ok=True)
+    final_paths = [dist / f"{stem}.zip", dist / f"{stem}.tar.gz", dist / "SHA256SUMS"]
+    for path in final_paths:
+        if path.is_symlink() or path.is_dir():
+            raise ValueError(f"refusing unsafe release output path: {path}")
 
-    zip_path = dist / f"{stem}.zip"
-    tar_path = dist / f"{stem}.tar.gz"
-    build_zip(root, zip_path, version)
-    build_tar_gz(root, tar_path, version)
+    staging = Path(tempfile.mkdtemp(prefix=".praxis-release-", dir=dist))
+    try:
+        staged_zip = staging / f"{stem}.zip"
+        staged_tar = staging / f"{stem}.tar.gz"
+        staged_checksums = staging / "SHA256SUMS"
+        build_zip(root, staged_zip, version, files)
+        build_tar_gz(root, staged_tar, version, files)
+        with staged_checksums.open("w", encoding="utf-8", newline="\n") as handle:
+            handle.write(
+                f"{sha256(staged_zip)}  {staged_zip.name}\n"
+                f"{sha256(staged_tar)}  {staged_tar.name}\n"
+            )
+        if args.clean:
+            clean_known_outputs(dist, stem)
+        for staged, final in zip(
+            (staged_zip, staged_tar, staged_checksums), final_paths
+        ):
+            os.replace(staged, final)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
 
-    checksums = dist / "SHA256SUMS"
-    checksums.write_text(
-        f"{sha256(zip_path)}  {zip_path.name}\n"
-        f"{sha256(tar_path)}  {tar_path.name}\n",
-        encoding="utf-8",
-    )
+    zip_path, tar_path, checksums = final_paths
     print(zip_path)
     print(tar_path)
     print(checksums)

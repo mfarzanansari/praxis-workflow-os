@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis Retrospective"
+  short_description: "Improve workflows from observed evidence"
+  default_prompt: "Use $praxis-retrospective to review workflow evidence and propose the smallest justified improvement."

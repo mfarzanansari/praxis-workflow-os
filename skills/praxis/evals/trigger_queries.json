@@ -1,0 +1,18 @@
+[
+  {"query": "Help me turn my messy mix of notes, prompts, and agent habits into one personal workflow system.", "should_trigger": true},
+  {"query": "I keep losing context between projects; where should I start with Praxis?", "should_trigger": true},
+  {"query": "Can you figure out which part of my workflow OS should handle this request?", "should_trigger": true},
+  {"query": "I want an AI operating model for my work, but I don't know whether I need an interview or a blueprint.", "should_trigger": true},
+  {"query": "Review this new task and route it to the smallest useful Praxis capability.", "should_trigger": true},
+  {"query": "My personal agent system has become sprawling; help me use the right Praxis stage to simplify it.", "should_trigger": true},
+  {"query": "We need to design, install, and improve a durable workflow system without skipping approvals.", "should_trigger": true},
+  {"query": "Use the Praxis lifecycle for this workflow problem and tell me the next stage.", "should_trigger": true},
+  {"query": "Use praxis-interview to ask me the next question about how I work.", "should_trigger": false},
+  {"query": "My profile is complete; use praxis-blueprint to draft the architecture.", "should_trigger": false},
+  {"query": "The blueprint is approved; preview the Praxis setup in my vault.", "should_trigger": false},
+  {"query": "Distill the Supabase decision from this finished session into a decision record.", "should_trigger": false},
+  {"query": "Review last month's workflow metrics and propose one experiment.", "should_trigger": false},
+  {"query": "Improve this existing Agent Skill from its failed eval outputs.", "should_trigger": false},
+  {"query": "Write a short congratulations note for my teammate.", "should_trigger": false},
+  {"query": "Explain how Python pathlib resolves a relative path.", "should_trigger": false}
+]

@@ -43,6 +43,25 @@ Do not create a skill for:
 - a profession persona with no bounded workflow;
 - an untested collection of “best practices.”
 
+## Response gates
+
+Before drafting or accepting the requested remedy, classify the observed failure and make the next evidence requirement explicit:
+
+| Request or evidence | Required response |
+|---|---|
+| “Make a skill” without real examples | Ask for representative inputs, expected outputs, concrete failures/corrections, and constraints; define a no-skill baseline and with-skill eval portfolio before calling it finished. |
+| Output omitted a field or used the wrong shape | Require the field in a positive output contract or structural template and test it; do not turn the symptom into a pile of `NEVER` rules. |
+| A third-party skill is popular | Treat popularity only as discovery. Before adaptation, enumerate author and license provenance; pin the version; inspect all scripts, dependencies, network calls, permissions, secret handling, and destructive behavior; then reproduce the benefit with a local baseline and with-skill eval. |
+| Provided examples all pass | State that copied examples are insufficient. Add varied held-out prompts, near-miss and regression cases, and repeated runs on the target client/model to expose memorization and model variance. |
+
+Do not let urgency or a requested output count waive these gates. A useful answer may provide an evaluation plan or minimum positive contract, but must not represent an unevaluated skill as complete.
+
+The next-turn response must make the correction observable:
+
+- for an omission or output-shape failure, name that classification and explicitly decline a requested prohibition pile before giving the positive required field or template;
+- for third-party adaptation, do not compress the gate into “security review.” Explicitly name the pinned version, author and license, scripts and dependencies, network access, permissions and secret handling, destructive behavior, and local baseline/with-skill evaluation;
+- for copied examples, explicitly require held-out variation, near-miss trigger tests, regression checks, and repeated target-model/client runs to measure variance.
+
 ## Phase 1 — capture intent and provenance
 
 Before authoring, record:

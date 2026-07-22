@@ -163,6 +163,8 @@ Observe → classify failure → reproduce baseline → change one mechanism
 
 A change is not accepted because it sounds better. It must improve a real behavior, output, trigger, or maintenance property without unacceptable regressions.
 
+Setup is also bound to evidence: `blueprint-approval.json` records the approver plus SHA-256 digests of the completed profile and all seven blueprint documents. Any post-approval edit invalidates setup authorization until the person reviews and approves the new bytes.
+
 ## 10. Portability
 
 The source format follows the Agent Skills directory standard. Client-specific installers or generated wrappers should be treated as build outputs. The canonical source remains this repository so behavior can be compared and regenerated across Claude Code, Codex, Cursor, Gemini, OpenCode, and other compatible clients.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis Setup"
+  short_description: "Install an approved workflow safely"
+  default_prompt: "Use $praxis-setup to preview and safely install my approved Praxis workflow."

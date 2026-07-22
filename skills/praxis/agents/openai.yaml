@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis"
+  short_description: "Route work through the Praxis lifecycle"
+  default_prompt: "Use $praxis to route this request to the smallest relevant Praxis lifecycle skill."

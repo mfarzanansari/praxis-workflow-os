@@ -20,7 +20,7 @@ Implement the approved architecture with **predictable, reversible, non-destruct
 Before running setup, verify:
 
 - `praxis/profile.json` exists and validates;
-- the written blueprint is approved;
+- the written blueprint is approved and `praxis/blueprint-approval.json` matches the exact profile and seven blueprint documents;
 - vault and skill target paths are confirmed;
 - the person has reviewed automation boundaries;
 - the first rollout scope is explicit;
@@ -38,11 +38,12 @@ If approval is missing, stop and return to `praxis-blueprint`.
 
 ## Required dry run
 
-Always preview before applying:
+Always preview before applying. The dry run is non-waivable, including when the person asks to proceed immediately or says the existing files are safe. Its report must enumerate every existing target as `skip` or `conflict`, not merely say it was preserved; replacement may appear only when both force and backup requirements are satisfied.
 
 ```bash
 python scripts/scaffold_system.py \
   --profile praxis/profile.json \
+  --approval-record praxis/blueprint-approval.json \
   --vault "C:/path/to/vault" \
   --skills-target "C:/Users/name/.claude/skills" \
   --mode augment \
@@ -56,6 +57,7 @@ Apply only after approval:
 ```bash
 python scripts/scaffold_system.py \
   --profile praxis/profile.json \
+  --approval-record praxis/blueprint-approval.json \
   --vault "C:/path/to/vault" \
   --skills-target "C:/Users/name/.claude/skills" \
   --mode augment

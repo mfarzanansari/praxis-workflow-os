@@ -1,0 +1,36 @@
+{
+  "name": "praxis-workflow-os",
+  "version": "1.0.0",
+  "description": "A profession-agnostic workflow operating system built from composable Agent Skills.",
+  "author": {
+    "name": "Farzan Ansari",
+    "url": "https://github.com/mfarzanansari"
+  },
+  "homepage": "https://github.com/mfarzanansari/praxis-workflow-os",
+  "repository": "https://github.com/mfarzanansari/praxis-workflow-os",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "personal-workflows",
+    "productivity",
+    "workflow-automation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Praxis Workflow OS",
+    "shortDescription": "Build and improve a personal workflow system",
+    "longDescription": "Interview how you work, compile an approved workflow architecture, install the minimum useful skills, and improve the system from evidence.",
+    "developerName": "Farzan Ansari",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/mfarzanansari/praxis-workflow-os",
+    "defaultPrompt": [
+      "Use Praxis to interview how I work and design my workflow system.",
+      "Use Praxis to review my workflow evidence and propose improvements.",
+      "Use Praxis to turn my approved blueprint into a safe minimal setup."
+    ]
+  }
+}

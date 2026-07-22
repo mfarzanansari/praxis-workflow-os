@@ -1,0 +1,20 @@
+{
+  "name": "praxis-workflow-os",
+  "interface": {
+    "displayName": "Praxis Workflow OS"
+  },
+  "plugins": [
+    {
+      "name": "praxis-workflow-os",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

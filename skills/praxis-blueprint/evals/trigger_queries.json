@@ -1,0 +1,18 @@
+[
+  {"query": "My Praxis profile is complete; compile it into an approval-ready workflow architecture.", "should_trigger": true},
+  {"query": "Turn these confirmed work streams into a constitution, skill graph, and rollout plan.", "should_trigger": true},
+  {"query": "Design the Obsidian knowledge model and automation gates from this completed profile.", "should_trigger": true},
+  {"query": "Create acceptance tests and handoff contracts before we install anything.", "should_trigger": true},
+  {"query": "Map my approved outcomes to the smallest useful lifecycle and work-stream skills.", "should_trigger": true},
+  {"query": "Preserve my existing vault taxonomy while proposing the Praxis architecture.", "should_trigger": true},
+  {"query": "I finished the discovery interview; show me the architecture in sections and stop for approval.", "should_trigger": true},
+  {"query": "Convert praxis/profile.json into workflow-constitution.md, skill-map.md, and rollout-plan.md.", "should_trigger": true},
+  {"query": "I have not answered the safety questions yet; continue interviewing me.", "should_trigger": false},
+  {"query": "The blueprint is approved; create the vault folders and install generated skills.", "should_trigger": false},
+  {"query": "Record our database choice as a durable decision with provenance.", "should_trigger": false},
+  {"query": "Review workflow metrics and decide whether an approval gate is too broad.", "should_trigger": false},
+  {"query": "Write a tested helper script for an existing Agent Skill.", "should_trigger": false},
+  {"query": "Draw a cloud infrastructure architecture diagram for our Kubernetes platform.", "should_trigger": false},
+  {"query": "Create a product roadmap from these feature requests.", "should_trigger": false},
+  {"query": "Replace my Obsidian folders immediately without reviewing the current structure.", "should_trigger": false}
+]

@@ -12,3 +12,4 @@ Thumbs.db
 *.log
 praxis-workflow-os-*.zip
 praxis-workflow-os-*.tar.gz
+.tmp/

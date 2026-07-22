@@ -37,13 +37,13 @@ Point-in-time adoption indicators observed during research included:
 
 | System | Approximate adoption signal on 2026-07-22 | Why inspected |
 |---|---:|---|
-| `obra/superpowers` | 255k GitHub stars | Composable process skills, design gates, TDD discipline |
-| `anthropics/skills` | 151k GitHub stars | Official Agent Skills examples and production document skills |
+| `obra/superpowers` | 259k GitHub stars | Composable process skills, design gates, TDD discipline |
+| `anthropics/skills` | 163k GitHub stars | Official Agent Skills examples and production document skills |
 | `github/spec-kit` | 123k GitHub stars | Constitution → spec → plan → tasks → implementation lifecycle |
 | `garrytan/gstack` | 123k GitHub stars | Opinionated role workflows, scripts, state, install/update productization |
-| `bmad-code-org/BMAD-METHOD` | 48.1k GitHub stars | Scale-adaptive guided workflows and specialist collaboration |
+| `bmad-code-org/BMAD-METHOD` | 50.9k GitHub stars | Scale-adaptive guided workflows and specialist collaboration |
 | `wshobson/agents` | 38.1k GitHub stars | Multi-harness generation and large composable marketplace |
-| `alirezarezvani/claude-skills` | 22.9k GitHub stars | Broad cross-domain packaging, interview tooling, scripts, references |
+| `alirezarezvani/claude-skills` | 23.0k GitHub stars | Broad cross-domain packaging, interview tooling, scripts, references |
 
 These numbers change and should never be interpreted as proof that a particular skill improves a particular workflow.
 
@@ -65,11 +65,11 @@ Official authoring guidance also stresses starting from real expertise, refining
 
 Sources:
 
-- https://agentskills.io/specification
-- https://agentskills.io/skill-creation/best-practices
-- https://agentskills.io/skill-creation/using-scripts
-- https://agentskills.io/skill-creation/optimizing-descriptions
-- https://github.com/anthropics/skills
+- <https://agentskills.io/specification>
+- <https://agentskills.io/skill-creation/best-practices>
+- <https://agentskills.io/skill-creation/using-scripts>
+- <https://agentskills.io/skill-creation/optimizing-descriptions>
+- <https://github.com/anthropics/skills>
 
 ## 3. Superpowers — skills as process enforcement
 
@@ -103,7 +103,7 @@ Superpowers is software-development-centered and intentionally forceful. Praxis 
 
 Source:
 
-- https://github.com/obra/superpowers
+- <https://github.com/obra/superpowers>
 
 ## 4. GitHub Spec Kit — artifacts and governance outlive the chat
 
@@ -136,7 +136,7 @@ profile → workflow constitution → work-stream map → skill graph
 
 Source:
 
-- https://github.com/github/spec-kit
+- <https://github.com/github/spec-kit>
 
 ## 5. gstack — a skill system becomes a product when operations are engineered
 
@@ -160,7 +160,7 @@ Praxis uses work streams rather than fixed executive/engineering roles. It adopt
 
 Source:
 
-- https://github.com/garrytan/gstack
+- <https://github.com/garrytan/gstack>
 
 ## 6. BMAD Method — adaptive depth and collaborative thinking
 
@@ -180,7 +180,7 @@ Praxis applies adaptive depth to the interview—quick, standard, and deep—but
 
 Source:
 
-- https://github.com/bmad-code-org/BMAD-METHOD
+- <https://github.com/bmad-code-org/BMAD-METHOD>
 
 ## 7. wshobson/agents — canonical source and multi-harness generation
 
@@ -200,7 +200,7 @@ Praxis ships standard Agent Skills source and a portable installer. Client-speci
 
 Source:
 
-- https://github.com/wshobson/agents
+- <https://github.com/wshobson/agents>
 
 ## 8. alirezarezvani/claude-skills and “grill-me” — interview discipline plus tooling
 
@@ -221,7 +221,7 @@ Praxis expands the interview beyond software design to work streams, stakeholder
 
 Source:
 
-- https://github.com/alirezarezvani/claude-skills
+- <https://github.com/alirezarezvani/claude-skills>
 
 ## 9. Empirical research — why “install more skills” is the wrong strategy
 
@@ -233,7 +233,7 @@ The 2026 benchmark paired 49 public skills with real repositories and controlled
 
 Source:
 
-- https://arxiv.org/abs/2603.15401
+- <https://arxiv.org/abs/2603.15401>
 
 ### AgentSkillOS
 
@@ -243,7 +243,7 @@ AgentSkillOS organizes large ecosystems into capability trees and composes multi
 
 Source:
 
-- https://arxiv.org/abs/2603.02176
+- <https://arxiv.org/abs/2603.02176>
 
 ### Ecosystem redundancy and security
 
@@ -253,9 +253,9 @@ Recent research has identified large-scale redundancy, dependency opacity, malic
 
 Sources:
 
-- https://arxiv.org/abs/2605.11418
-- https://arxiv.org/abs/2605.09594
-- https://arxiv.org/abs/2607.01136
+- <https://arxiv.org/abs/2605.11418>
+- <https://arxiv.org/abs/2605.09594>
+- <https://arxiv.org/abs/2607.01136>
 
 ## 10. Why Praxis is profession-agnostic
 

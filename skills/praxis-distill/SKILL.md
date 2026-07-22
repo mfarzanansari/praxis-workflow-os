@@ -17,6 +17,8 @@ Durable knowledge is **future decision support**, not an activity log. Preserve 
 
 “Nothing worth preserving” is a valid and often correct result.
 
+Changing facts are never durable as bare values. A price, version, policy, role, schedule, market fact, or similar claim must carry its source, an `as of` date, and an explicit review date or expiry condition. If any of those are unavailable, preserve the item only as an unresolved claim or omit it.
+
 ## Distillation threshold
 
 Create a durable note when at least one is true:

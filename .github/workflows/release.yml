@@ -16,8 +16,13 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: Validate and build release assets
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,13 +32,13 @@ jobs:
       commit: ${{ steps.version.outputs.commit }}
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.13"
 
@@ -98,7 +103,7 @@ jobs:
         run: python scripts/build_release.py --clean
 
       - name: Upload release assets for privileged publish job
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: release-assets-${{ steps.version.outputs.tag }}
           path: |
@@ -109,22 +114,24 @@ jobs:
           retention-days: 1
 
   publish:
+    name: Attest and publish immutable release
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      actions: read
-      attestations: write
-      contents: write
-      id-token: write
+      actions: read  # Required to bind publication to a successful CI run.
+      attestations: write  # Required to publish build-provenance attestations.
+      contents: write  # Required to create, populate, and publish the release.
+      id-token: write  # Required to obtain the OIDC identity for attestations.
     steps:
       - name: Checkout exact validated commit
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
           ref: ${{ needs.build.outputs.commit }}
 
       - name: Download validated release assets
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: release-assets-${{ needs.build.outputs.tag }}
           path: dist
@@ -183,13 +190,13 @@ jobs:
           fi
 
       - name: Attest release archives
-        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6  # v4.2.0
         with:
           subject-path: |
             dist/*.zip
             dist/*.tar.gz
 
-      - name: Publish GitHub release
+      - name: Reconcile draft and publish immutable GitHub release
         env:
           COMMIT: ${{ needs.build.outputs.commit }}
           GH_TOKEN: ${{ github.token }}
@@ -199,20 +206,120 @@ jobs:
         run: |
           set -euo pipefail
           NOTES="docs/releases/v${VERSION}.md"
-          if [[ -f "$NOTES" ]]; then
-            gh release create "$TAG" \
-              dist/*.zip dist/*.tar.gz dist/SHA256SUMS \
-              --repo "$GITHUB_REPOSITORY" \
-              --target "$COMMIT" \
-              --title "Praxis Workflow OS $TAG" \
-              --notes-file "$NOTES" \
-              --verify-tag
-          else
-            gh release create "$TAG" \
-              dist/*.zip dist/*.tar.gz dist/SHA256SUMS \
-              --repo "$GITHUB_REPOSITORY" \
-              --target "$COMMIT" \
-              --title "Praxis Workflow OS $TAG" \
-              --generate-notes \
-              --verify-tag
+          mapfile -t ARCHIVE_NAMES < <(awk 'NF == 2 {print $2}' dist/SHA256SUMS)
+          if [[ "${#ARCHIVE_NAMES[@]}" -ne 2 ]]; then
+            echo "SHA256SUMS must name exactly two release archives." >&2
+            exit 11
           fi
+          EXPECTED_NAMES=("SHA256SUMS" "${ARCHIVE_NAMES[@]}")
+          ASSETS=("dist/SHA256SUMS")
+          for name in "${ARCHIVE_NAMES[@]}"; do
+            if [[ "$name" == */* || ! -f "dist/$name" ]]; then
+              echo "Invalid or missing release asset from SHA256SUMS: $name" >&2
+              exit 12
+            fi
+            ASSETS+=("dist/$name")
+          done
+          (cd dist && sha256sum --check SHA256SUMS)
+
+          if ! RELEASE_JSON="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" 2>/dev/null)"; then
+            if [[ -f "$NOTES" ]]; then
+              gh release create "$TAG" "${ASSETS[@]}" \
+                --repo "$GITHUB_REPOSITORY" \
+                --target "$COMMIT" \
+                --title "Praxis Workflow OS $TAG" \
+                --notes-file "$NOTES" \
+                --verify-tag \
+                --draft
+            else
+              gh release create "$TAG" "${ASSETS[@]}" \
+                --repo "$GITHUB_REPOSITORY" \
+                --target "$COMMIT" \
+                --title "Praxis Workflow OS $TAG" \
+                --generate-notes \
+                --verify-tag \
+                --draft
+            fi
+            RELEASE_JSON="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG")"
+          fi
+
+          RELEASE_TARGET="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["target_commitish"])' <<<"$RELEASE_JSON")"
+          RELEASE_TITLE="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])' <<<"$RELEASE_JSON")"
+          IS_DRAFT="$(python3 -c 'import json,sys; print(str(json.load(sys.stdin)["draft"]).lower())' <<<"$RELEASE_JSON")"
+          if [[ "$RELEASE_TARGET" != "$COMMIT" ]]; then
+            echo "Existing release targets $RELEASE_TARGET, not $COMMIT." >&2
+            exit 13
+          fi
+          if [[ "$RELEASE_TITLE" != "Praxis Workflow OS $TAG" ]]; then
+            echo "Existing release has an unexpected title: $RELEASE_TITLE" >&2
+            exit 14
+          fi
+
+          declare -A EXPECTED=()
+          for name in "${EXPECTED_NAMES[@]}"; do EXPECTED["$name"]=1; done
+          mapfile -t EXISTING_NAMES < <(
+            python3 -c 'import json,sys; print("\n".join(a["name"] for a in json.load(sys.stdin)["assets"]))' \
+              <<<"$RELEASE_JSON"
+          )
+          for name in "${EXISTING_NAMES[@]}"; do
+            if [[ -z "${EXPECTED[$name]+set}" ]]; then
+              echo "Existing release has an unexpected asset: $name" >&2
+              exit 15
+            fi
+          done
+
+          DOWNLOAD_DIR="$(mktemp -d)"
+          trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
+          if [[ "${#EXISTING_NAMES[@]}" -gt 0 ]]; then
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$DOWNLOAD_DIR"
+          fi
+          MISSING=()
+          for name in "${EXPECTED_NAMES[@]}"; do
+            if [[ -f "$DOWNLOAD_DIR/$name" ]]; then
+              if ! cmp -s "dist/$name" "$DOWNLOAD_DIR/$name"; then
+                echo "Existing release asset differs from the validated build: $name" >&2
+                exit 16
+              fi
+            else
+              MISSING+=("dist/$name")
+            fi
+          done
+
+          if [[ "${#MISSING[@]}" -gt 0 ]]; then
+            if [[ "$IS_DRAFT" != "true" ]]; then
+              echo "Published release is missing validated assets and cannot be mutated." >&2
+              exit 17
+            fi
+            gh release upload "$TAG" "${MISSING[@]}" --repo "$GITHUB_REPOSITORY"
+          fi
+
+          rm -rf "$DOWNLOAD_DIR"
+          mkdir -p "$DOWNLOAD_DIR"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$DOWNLOAD_DIR"
+          ACTUAL_COUNT="$(find "$DOWNLOAD_DIR" -maxdepth 1 -type f | wc -l)"
+          if [[ "$ACTUAL_COUNT" -ne "${#EXPECTED_NAMES[@]}" ]]; then
+            echo "Release asset count mismatch after reconciliation." >&2
+            exit 18
+          fi
+          for name in "${EXPECTED_NAMES[@]}"; do
+            if [[ ! -f "$DOWNLOAD_DIR/$name" ]] || ! cmp -s "dist/$name" "$DOWNLOAD_DIR/$name"; then
+              echo "Release asset verification failed: $name" >&2
+              exit 19
+            fi
+          done
+
+          if [[ "$IS_DRAFT" == "true" ]]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          else
+            echo "Existing published release already matches the validated assets; no mutation required."
+          fi
+
+          {
+            echo "### Praxis Workflow OS $TAG"
+            echo "- Commit: \`$COMMIT\`"
+            echo "- Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Release: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG"
+            echo '```text'
+            (cd dist && sha256sum SHA256SUMS "${ARCHIVE_NAMES[@]}")
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

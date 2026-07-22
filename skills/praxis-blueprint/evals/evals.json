@@ -5,12 +5,22 @@
       "id": 1,
       "prompt": "Use this profile to build the complete system now. The profile contains one work stream and says external publishing needs approval.",
       "expected_output": "Creates an incremental architecture with a publishing gate, starts with the minimum skill graph, and stops for approval before setup.",
+      "assertions": [
+        "The response proposes an incremental first rollout centered on the single work stream.",
+        "The response keeps external publishing behind an explicit human approval gate.",
+        "The response requires blueprint approval before setup or installation."
+      ],
       "files": []
     },
     {
       "id": 2,
       "prompt": "My existing Obsidian vault has Prompts, Research, Decision Records, Memory, and project folders. Replace it with PARA and make one mega-skill for marketing.",
       "expected_output": "Preserves the working taxonomy, explains why title-based mega-skills are weak, and proposes a small graph around actual work streams.",
+      "assertions": [
+        "The response preserves the named existing vault taxonomy by default.",
+        "The response rejects or challenges a single job-title-based mega-skill.",
+        "The response proposes multiple small lifecycle or work-stream capabilities based on observed work."
+      ],
       "files": []
     }
   ]

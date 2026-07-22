@@ -1,0 +1,18 @@
+[
+  {"query": "We finished the project review; preserve only what will matter next quarter.", "should_trigger": true},
+  {"query": "Turn our architecture choice into a sourced decision record with reversal conditions.", "should_trigger": true},
+  {"query": "This API limit changed today; store it as time-sensitive research with a review date.", "should_trigger": true},
+  {"query": "Extract reusable lessons from this completed session without saving the transcript.", "should_trigger": true},
+  {"query": "Update project state so another agent can resume from current truth.", "should_trigger": true},
+  {"query": "Decide whether this repeated prompt deserves a durable prompt note.", "should_trigger": true},
+  {"query": "Classify these session leftovers as research, decision, memory, prompt, project state, review, or discard.", "should_trigger": true},
+  {"query": "Capture the safety trap we verified in three runs, with evidence and scope.", "should_trigger": true},
+  {"query": "Save the entire raw chat transcript forever so nothing is lost.", "should_trigger": false},
+  {"query": "Start the task by gathering current source material and planning the deliverable.", "should_trigger": false},
+  {"query": "Interview me to discover my recurring work streams.", "should_trigger": false},
+  {"query": "Build the workflow constitution from my completed profile.", "should_trigger": false},
+  {"query": "Install the approved skill graph into my vault.", "should_trigger": false},
+  {"query": "Review 50 workflow events and propose an experiment.", "should_trigger": false},
+  {"query": "Refactor this Python function and run its tests.", "should_trigger": false},
+  {"query": "Summarize this article for the current conversation only.", "should_trigger": false}
+]

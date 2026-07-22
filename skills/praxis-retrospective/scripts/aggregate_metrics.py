@@ -10,11 +10,48 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import statistics
 import sys
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
+
+DEFAULT_MAX_BYTES = 64 * 1024 * 1024
+DEFAULT_MAX_LINES = 100_000
+DEFAULT_MAX_KEYS = 10_000
+
+
+class LimitExceeded(ValueError):
+    pass
+
+
+def reject_symlink_components(path: Path, label: str) -> None:
+    path = path if path.is_absolute() else Path.cwd() / path
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SystemExit(f"Error: {label} contains a symlink component: {current}")
+        if not current.exists():
+            break
+
+
+def atomic_write(path: Path, text: str) -> None:
+    reject_symlink_components(path, "metrics output path")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.praxis-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            Path(temporary).unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def numeric(values: Iterable[Any]) -> List[float]:
@@ -38,27 +75,52 @@ def stats(values: List[float]) -> Dict[str, float | int | None]:
     }
 
 
-def load_events(path: Path, strict: bool) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def load_events(
+    path: Path,
+    strict: bool,
+    max_bytes: int,
+    max_lines: int,
+    max_keys: int,
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     events: List[Dict[str, Any]] = []
     errors: List[Dict[str, Any]] = []
+    if path.is_symlink():
+        raise SystemExit(f"Error: event log must not be a symlink: {path}")
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        size = path.stat().st_size
     except FileNotFoundError:
         raise SystemExit(f"Error: event log not found: {path}")
-    for line_no, line in enumerate(lines, start=1):
-        if not line.strip():
-            continue
-        try:
-            item = json.loads(line)
-            if not isinstance(item, dict):
-                raise ValueError("event must be a JSON object")
-            events.append(item)
-        except (json.JSONDecodeError, ValueError) as exc:
-            error = {"line": line_no, "error": str(exc)}
-            errors.append(error)
-            if strict:
-                print(json.dumps({"valid": False, "errors": errors}, indent=2))
-                raise SystemExit(2)
+    if size > max_bytes:
+        raise LimitExceeded(f"input is {size} bytes; --max-bytes is {max_bytes}")
+    observed_keys = set()
+    with path.open("r", encoding="utf-8") as handle:
+        for line_no, line in enumerate(handle, start=1):
+            if line_no > max_lines:
+                raise LimitExceeded(f"input exceeds --max-lines ({max_lines})")
+            if not line.strip():
+                continue
+            try:
+                item = json.loads(line)
+                if not isinstance(item, dict):
+                    raise ValueError("event must be a JSON object")
+                for field in ("skill", "work_stream", "outcome"):
+                    observed_keys.add((field, str(item.get(field, "unknown"))))
+                tags = item.get("friction_tags", [])
+                if isinstance(tags, str):
+                    tags = [tags]
+                if isinstance(tags, list):
+                    observed_keys.update(("friction_tag", str(tag)) for tag in tags)
+                if len(observed_keys) > max_keys:
+                    raise LimitExceeded(f"input exceeds --max-keys ({max_keys})")
+                events.append(item)
+            except (json.JSONDecodeError, ValueError) as exc:
+                if isinstance(exc, LimitExceeded):
+                    raise
+                error = {"line": line_no, "error": str(exc)}
+                errors.append(error)
+                if strict:
+                    print(json.dumps({"valid": False, "errors": errors}, indent=2))
+                    raise SystemExit(2)
     return events, errors
 
 
@@ -67,9 +129,29 @@ def main() -> int:
     parser.add_argument("input", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
+    parser.add_argument("--max-lines", type=int, default=DEFAULT_MAX_LINES)
+    parser.add_argument("--max-keys", type=int, default=DEFAULT_MAX_KEYS)
     args = parser.parse_args()
 
-    events, parse_errors = load_events(args.input, args.strict)
+    if min(args.max_bytes, args.max_lines, args.max_keys) < 1:
+        raise SystemExit("Error: resource limits must be positive integers.")
+    try:
+        events, parse_errors = load_events(
+            args.input, args.strict, args.max_bytes, args.max_lines, args.max_keys
+        )
+    except LimitExceeded as exc:
+        print(json.dumps({
+            "valid": False,
+            "error": "resource limit exceeded",
+            "detail": str(exc),
+            "limits": {
+                "max_bytes": args.max_bytes,
+                "max_lines": args.max_lines,
+                "max_keys": args.max_keys,
+            },
+        }, indent=2))
+        return 2
     skills = Counter(str(e.get("skill", "unknown")) for e in events)
     streams = Counter(str(e.get("work_stream", "unknown")) for e in events)
     outcomes = Counter(str(e.get("outcome", "unknown")) for e in events)
@@ -123,8 +205,7 @@ def main() -> int:
     }
     text = json.dumps(result, indent=2, ensure_ascii=False) + "\n"
     if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text, encoding="utf-8")
+        atomic_write(args.output, text)
     print(text, end="")
     return 0
 

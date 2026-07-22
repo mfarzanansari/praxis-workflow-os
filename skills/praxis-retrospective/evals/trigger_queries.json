@@ -1,0 +1,18 @@
+[
+  {"query": "Review the last month of corrections and false triggers, then propose one workflow experiment.", "should_trigger": true},
+  {"query": "Our approval gate causes repeated delay; use evidence to decide whether to narrow it.", "should_trigger": true},
+  {"query": "Three skills have not been used in six weeks; should we remove or merge them?", "should_trigger": true},
+  {"query": "Analyze praxis events.jsonl for recurring friction and quality failures.", "should_trigger": true},
+  {"query": "The agent keeps rebuilding the same helper; recommend the smallest system improvement.", "should_trigger": true},
+  {"query": "Run our weekly Praxis review and define success and rollback criteria for one change.", "should_trigger": true},
+  {"query": "Compare expected and observed workflow behavior before changing the skill graph.", "should_trigger": true},
+  {"query": "Assess whether our workflow OS is earning its complexity from actual usage evidence.", "should_trigger": true},
+  {"query": "One response was poor; rewrite it now for the user.", "should_trigger": false},
+  {"query": "Capture the reusable lesson from the session we just finished.", "should_trigger": false},
+  {"query": "Interview me about my goals and work streams for the first time.", "should_trigger": false},
+  {"query": "Turn the completed profile into a workflow architecture.", "should_trigger": false},
+  {"query": "Apply the already approved setup plan to my vault.", "should_trigger": false},
+  {"query": "Build a new skill and establish its baseline evals.", "should_trigger": false},
+  {"query": "Diagnose why this individual unit test fails.", "should_trigger": false},
+  {"query": "Write a quarterly business retrospective from these revenue numbers.", "should_trigger": false}
+]

@@ -42,32 +42,43 @@ The repository also includes:
 - safe dry-run, non-overwrite, backup, and rollback behavior;
 - example profiles for seven very different professions;
 - repository, release, profile, and skill validators;
-- deterministic unit tests and model-level eval portfolios;
+- deterministic unit tests, assertable behavior evals, and realistic trigger suites;
 - cross-platform installers;
-- a Claude Code marketplace manifest;
+- native Codex and Claude Code plugin manifests;
 - automated release archives, checksums, and build-provenance attestations;
 - research, architecture, governance, security, and maintenance documentation.
 
 ## Install
 
-### Open Agent Skills CLI — recommended
+### Codex plugin
+
+```bash
+codex plugin marketplace add mfarzanansari/praxis-workflow-os
+codex plugin add praxis-workflow-os@praxis-workflow-os
+```
+
+Start a new Codex thread after installation so the seven skills are discovered.
+
+### Open Agent Skills CLI — cross-client
+
+The Skills CLI collects anonymous usage telemetry by default. Set `DISABLE_TELEMETRY=1` for a privacy-preserving install, or use a native client plugin/local installer instead.
 
 List the available skills:
 
 ```bash
-npx skills add mfarzanansari/praxis-workflow-os --list
+DISABLE_TELEMETRY=1 npx skills add mfarzanansari/praxis-workflow-os --list
 ```
 
 Install the complete system globally:
 
 ```bash
-npx skills add mfarzanansari/praxis-workflow-os --skill '*' -g
+DISABLE_TELEMETRY=1 npx skills add mfarzanansari/praxis-workflow-os --skill '*' -g
 ```
 
 Install only the interview and blueprint first:
 
 ```bash
-npx skills add mfarzanansari/praxis-workflow-os \
+DISABLE_TELEMETRY=1 npx skills add mfarzanansari/praxis-workflow-os \
   --skill praxis \
   --skill praxis-interview \
   --skill praxis-blueprint \
@@ -215,6 +226,8 @@ gh attestation verify praxis-workflow-os-v1.0.0.zip \
 - [Quickstart](QUICKSTART.md)
 - [Research report](RESEARCH_REPORT.md)
 - [Release research](RELEASE_RESEARCH.md)
+- [v1.0.0 pre-release audit](docs/audits/v1.0.0-pre-release-audit.md)
+- [v1.0.0 model evaluation](docs/evaluations/v1.0.0/README.md)
 - [Maintenance model](MAINTENANCE.md)
 - [Governance](GOVERNANCE.md)
 - [Security policy](SECURITY.md)
@@ -225,7 +238,7 @@ gh attestation verify praxis-workflow-os-v1.0.0.zip \
 
 ## Status
 
-`v1.0.0` defines the first stable public workflow contract. Bundled scripts are deterministic and tested locally; model-level eval portfolios are included for target-client validation because model behavior can vary by client, model version, permissions, and available tools.
+`v1.0.0` defines the first stable public workflow contract. Bundled scripts are deterministic and tested across the supported Python matrix. The published evaluation reports both passing behavior-remediation traces and an honest 81.8% crowded-catalog trigger result; routing improvements continue in public issues rather than being hidden from the release record.
 
 ## License
 

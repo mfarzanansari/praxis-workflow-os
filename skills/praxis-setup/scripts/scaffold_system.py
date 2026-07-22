@@ -8,12 +8,147 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
+import os
 import re
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
+
+
+REQUIRED_PROFILE_FIELDS = {
+    "schema_version", "profile_id", "status", "interview", "person", "consent",
+    "outcomes", "work_streams", "tools_and_sources", "human_constraints",
+    "knowledge_policy", "automation_boundaries", "governance", "evidence", "open_questions",
+}
+SETUP_READY_STATUSES = {"complete", "mature"}
+BLUEPRINT_FILES = (
+    "workflow-constitution.md", "work-streams.md", "skill-map.md",
+    "knowledge-architecture.md", "automation-boundaries.md", "rollout-plan.md",
+    "acceptance-tests.md",
+)
+
+
+def absolute(path: Path) -> Path:
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+def paths_overlap(first: Path, second: Path) -> bool:
+    return first == second or first in second.parents or second in first.parents
+
+
+def reject_symlink_components(path: Path, label: str) -> None:
+    path = absolute(path)
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SystemExit(f"Error: {label} contains a symlink component: {current}")
+        if not current.exists():
+            break
+
+
+def atomic_write(path: Path, text: str) -> None:
+    reject_symlink_components(path, "output path")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.praxis-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            Path(temporary).unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def profile_errors(profile: Dict[str, Any]) -> List[str]:
+    errors = [f"missing top-level field: {key}" for key in sorted(REQUIRED_PROFILE_FIELDS - profile.keys())]
+    if profile.get("status") not in SETUP_READY_STATUSES:
+        errors.append(
+            "status must be complete or mature before setup; finish and approve the interview first"
+        )
+    if not isinstance(profile.get("consent"), dict) or not profile.get("consent", {}).get("change_permission"):
+        errors.append("consent.change_permission must be non-empty")
+    if not isinstance(profile.get("outcomes"), dict) or not profile.get("outcomes", {}).get("primary"):
+        errors.append("outcomes.primary must be non-empty")
+    streams = profile.get("work_streams")
+    if not isinstance(streams, list) or not streams:
+        errors.append("work_streams must contain at least one item")
+    else:
+        required_stream = ("id", "name", "trigger", "deliverables", "quality_gates")
+        for index, stream in enumerate(streams):
+            if not isinstance(stream, dict):
+                errors.append(f"work_streams[{index}] must be an object")
+                continue
+            for key in required_stream:
+                if not stream.get(key):
+                    errors.append(f"work_streams[{index}].{key} must be non-empty")
+    boundaries = profile.get("automation_boundaries")
+    boundary_keys = ("autonomous", "review_before_action", "explicit_per_action", "forbidden")
+    if not isinstance(boundaries, dict):
+        errors.append("automation_boundaries must be an object")
+    else:
+        for key in boundary_keys:
+            if key not in boundaries or not isinstance(boundaries[key], list):
+                errors.append(f"automation_boundaries.{key} must be a list")
+        if not any(boundaries.get(key) for key in boundary_keys):
+            errors.append("automation_boundaries must contain at least one classified action")
+    if not isinstance(profile.get("governance"), dict) or not profile.get("governance", {}).get("review_cadence"):
+        errors.append("governance.review_cadence must be non-empty")
+    if not isinstance(profile.get("knowledge_policy"), dict):
+        errors.append("knowledge_policy must be an object")
+    return errors
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_blueprint_approval(
+    profile: Dict[str, Any],
+    profile_path: Path,
+    approval_path: Path | None,
+) -> Dict[str, Any]:
+    if approval_path is None:
+        raise SystemExit(
+            "Error: --approval-record is required; approve the exact blueprint before setup."
+        )
+    approval_path = absolute(approval_path)
+    reject_symlink_components(approval_path, "approval record")
+    try:
+        record = json.loads(approval_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise SystemExit(f"Error: approval record not found: {approval_path}")
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Error: invalid approval record JSON: {exc}")
+    if not isinstance(record, dict) or record.get("status") != "approved":
+        raise SystemExit("Error: blueprint approval record must have status approved.")
+    if record.get("profile_id") != profile.get("profile_id"):
+        raise SystemExit("Error: blueprint approval profile_id does not match the selected profile.")
+    if record.get("profile_sha256") != sha256(profile_path):
+        raise SystemExit("Error: selected profile changed after blueprint approval.")
+    if not isinstance(record.get("approver"), str) or not record["approver"].strip():
+        raise SystemExit("Error: blueprint approval record has no approver.")
+    files = record.get("blueprint_files")
+    if not isinstance(files, dict) or set(files) != set(BLUEPRINT_FILES):
+        raise SystemExit("Error: blueprint approval record must hash all seven blueprint files.")
+    blueprint_dir = approval_path.parent
+    for name in BLUEPRINT_FILES:
+        path = blueprint_dir / name
+        reject_symlink_components(path, "approved blueprint file")
+        if not path.is_file() or files[name] != sha256(path):
+            raise SystemExit(f"Error: approved blueprint file is missing or changed: {path}")
+    return record
 
 
 def load_profile(path: Path) -> Dict[str, Any]:
@@ -25,8 +160,9 @@ def load_profile(path: Path) -> Dict[str, Any]:
         raise SystemExit(f"Error: invalid JSON in {path}: {exc}")
     if not isinstance(profile, dict):
         raise SystemExit("Error: profile root must be a JSON object.")
-    if not profile.get("profile_id"):
-        raise SystemExit("Error: profile_id is required.")
+    errors = profile_errors(profile)
+    if errors:
+        raise SystemExit("Error: profile is not setup-ready:\n- " + "\n- ".join(errors))
     return profile
 
 
@@ -378,47 +514,73 @@ def generated_skills(profile: Dict[str, Any], max_streams: int) -> Dict[Path, st
     return files
 
 
-def backup_existing(source: Path, root: Path, relative: Path) -> Path:
-    destination = root / relative
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, destination)
-    return destination
-
-
-def plan_files(base: Path, files: Dict[Path, str], force: bool) -> List[Dict[str, str]]:
+def plan_files(
+    base: Path,
+    files: Dict[Path, str],
+    force: bool,
+    backup_root: Path | None,
+) -> List[Dict[str, str]]:
     plan = []
     for relative in sorted(files, key=lambda p: str(p).lower()):
         target = base / relative
+        reject_symlink_components(target, "setup target")
+        if target.exists() and not target.is_file():
+            raise SystemExit(f"Error: setup target is not a regular file: {target}")
         action = "replace" if target.exists() and force else "skip" if target.exists() else "create"
-        plan.append({"base": str(base), "relative": str(relative), "path": str(target), "action": action})
+        item = {"base": str(base), "relative": str(relative), "path": str(target), "action": action}
+        if action == "replace":
+            if backup_root is None:
+                raise RuntimeError("replace planned without backup root")
+            backup = backup_root / relative
+            reject_symlink_components(backup, "backup target")
+            if backup.exists() or backup.is_symlink():
+                raise SystemExit(f"Error: backup destination already exists: {backup}")
+            item["backup"] = str(backup)
+        plan.append(item)
     return plan
 
 
-def apply_plan(plan: List[Dict[str, str]], content: Dict[Path, str], backup_root: Path | None) -> List[Dict[str, str]]:
-    results = []
+def apply_plan(
+    plan: List[Dict[str, str]],
+    contents: Dict[str, Dict[Path, str]],
+) -> List[Dict[str, str]]:
+    results: List[Dict[str, str]] = []
+    written: List[Dict[str, str]] = []
     for item in plan:
-        target = Path(item["path"])
-        relative = Path(item["relative"])
-        action = item["action"]
-        result = dict(item)
-        if action == "skip":
-            result["result"] = "unchanged"
-        else:
-            if action == "replace":
-                if backup_root is None:
-                    raise RuntimeError("replace planned without backup root")
-                backup = backup_existing(target, backup_root, relative)
-                result["backup"] = str(backup)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content[relative], encoding="utf-8")
-            result["result"] = "written"
-        results.append(result)
+        if item["action"] == "replace":
+            backup = Path(item["backup"])
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(Path(item["path"]), backup)
+    try:
+        for item in plan:
+            result = dict(item)
+            if item["action"] == "skip":
+                result["result"] = "unchanged"
+            else:
+                target = Path(item["path"])
+                content = contents[item["base"]][Path(item["relative"])]
+                atomic_write(target, content)
+                result["result"] = "written"
+                written.append(item)
+            results.append(result)
+    except Exception:
+        for item in reversed(written):
+            target = Path(item["path"])
+            if item["action"] == "create":
+                try:
+                    target.unlink()
+                except FileNotFoundError:
+                    pass
+            else:
+                shutil.copy2(Path(item["backup"]), target)
+        raise
     return results
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", type=Path, required=True)
+    parser.add_argument("--approval-record", type=Path)
     parser.add_argument("--vault", type=Path)
     parser.add_argument("--skills-target", type=Path, required=True)
     parser.add_argument("--mode", choices=("augment", "new-vault", "skills-only"), default="augment")
@@ -429,48 +591,66 @@ def main() -> int:
     parser.add_argument("--report", type=Path, default=Path("praxis-install-report.json"))
     args = parser.parse_args()
 
+    profile_path = absolute(args.profile)
+    vault = absolute(args.vault) if args.vault else None
+    skills_target = absolute(args.skills_target)
+    backup_dir = absolute(args.backup_dir) if args.backup_dir else None
+    report_path = absolute(args.report)
+    reject_symlink_components(profile_path, "profile path")
+    reject_symlink_components(skills_target, "skills target")
+    reject_symlink_components(report_path, "report path")
+    if vault is not None:
+        reject_symlink_components(vault, "vault path")
+        if paths_overlap(vault, skills_target):
+            raise SystemExit("Error: vault and skills target directories must not overlap.")
+    if backup_dir is not None:
+        reject_symlink_components(backup_dir, "backup path")
+        for target in [skills_target, *([vault] if vault is not None else [])]:
+            if paths_overlap(target, backup_dir):
+                raise SystemExit("Error: backup directory must not overlap a setup target.")
     if args.max_streams < 1 or args.max_streams > 20:
         raise SystemExit("Error: --max-streams must be between 1 and 20.")
     if args.mode != "skills-only" and args.vault is None:
         raise SystemExit("Error: --vault is required unless --mode skills-only.")
     if args.force and args.backup_dir is None:
         raise SystemExit("Error: --force requires --backup-dir so every replacement is recoverable.")
-    if args.mode == "new-vault" and args.vault and args.vault.exists() and any(args.vault.iterdir()) and not args.force:
+    if args.mode == "new-vault" and vault and vault.exists() and any(vault.iterdir()) and not args.force:
         raise SystemExit("Error: new-vault target is not empty. Use augment or explicit --force with --backup-dir.")
 
-    profile = load_profile(args.profile)
+    profile = load_profile(profile_path)
+    approval = verify_blueprint_approval(profile, profile_path, args.approval_record)
     skill_content = generated_skills(profile, args.max_streams)
     plans: List[Dict[str, str]] = []
     vault_content: Dict[Path, str] = {}
     if args.mode != "skills-only":
-        assert args.vault is not None
+        if vault is None:
+            raise RuntimeError("vault path is required outside skills-only mode")
         vault_content = vault_files(profile)
-        plans.extend(plan_files(args.vault, vault_content, args.force))
-    plans.extend(plan_files(args.skills_target, skill_content, args.force))
+        plans.extend(plan_files(vault, vault_content, args.force, backup_dir / "vault" if backup_dir else None))
+    plans.extend(plan_files(skills_target, skill_content, args.force, backup_dir / "skills" if backup_dir else None))
 
     report = {
         "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
         "profile_id": profile.get("profile_id"),
+        "blueprint_approval": str(absolute(args.approval_record)),
+        "blueprint_approved_at": approval.get("approved_at"),
+        "blueprint_approver": approval.get("approver"),
         "mode": args.mode,
         "dry_run": args.dry_run,
         "force": args.force,
-        "backup_dir": str(args.backup_dir) if args.backup_dir else None,
+        "backup_dir": str(backup_dir) if backup_dir else None,
         "actions": plans,
     }
     if args.dry_run:
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 0
 
-    results: List[Dict[str, str]] = []
-    if args.mode != "skills-only":
-        assert args.vault is not None
-        vault_plan = [p for p in plans if p["base"] == str(args.vault)]
-        results.extend(apply_plan(vault_plan, vault_content, args.backup_dir / "vault" if args.backup_dir else None))
-    skill_plan = [p for p in plans if p["base"] == str(args.skills_target)]
-    results.extend(apply_plan(skill_plan, skill_content, args.backup_dir / "skills" if args.backup_dir else None))
+    contents = {str(skills_target): skill_content}
+    if vault is not None:
+        contents[str(vault)] = vault_content
+    results = apply_plan(plans, contents)
     report["actions"] = results
-    args.report.parent.mkdir(parents=True, exist_ok=True)
-    args.report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write(report_path, json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     print(json.dumps({
         "status": "complete",
         "report": str(args.report),

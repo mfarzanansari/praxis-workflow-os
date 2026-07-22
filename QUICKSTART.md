@@ -20,6 +20,15 @@ python3 scripts/install.py --target ~/.claude/skills
 
 Restart the agent client if it discovers skills only at session start.
 
+For Codex, the native plugin route is:
+
+```bash
+codex plugin marketplace add mfarzanansari/praxis-workflow-os
+codex plugin add praxis-workflow-os@praxis-workflow-os
+```
+
+The cross-client `npx skills` installer enables anonymous telemetry by default. Prefix its commands with `DISABLE_TELEMETRY=1` to opt out.
+
 ## Phase 1 — Interview
 
 Prompt:
@@ -58,6 +67,16 @@ praxis/rollout-plan.md
 praxis/acceptance-tests.md
 ```
 
+After the person reviews every document, removes draft/TODO markers, and explicitly approves the exact blueprint, create its content-hashed approval record:
+
+```bash
+python3 skills/praxis-blueprint/scripts/approve_blueprint.py \
+  --profile praxis/profile.json \
+  --blueprint-dir praxis \
+  --approver "Your name" \
+  --confirm-approved
+```
+
 ## Phase 3 — Setup
 
 Preview all filesystem changes:
@@ -65,6 +84,7 @@ Preview all filesystem changes:
 ```bash
 python3 skills/praxis-setup/scripts/scaffold_system.py \
   --profile praxis/profile.json \
+  --approval-record praxis/blueprint-approval.json \
   --vault /path/to/vault \
   --skills-target ~/.claude/skills \
   --mode augment \
@@ -76,6 +96,7 @@ Apply after reviewing the plan:
 ```bash
 python3 skills/praxis-setup/scripts/scaffold_system.py \
   --profile praxis/profile.json \
+  --approval-record praxis/blueprint-approval.json \
   --vault /path/to/vault \
   --skills-target ~/.claude/skills \
   --mode augment
@@ -109,7 +130,6 @@ Create or revise a skill only after a recurring failure is visible:
 - **Day 2:** install only start-work, finish-work, and one high-value work-stream skill.
 - **Days 3–6:** use them on real work; record corrections and friction.
 - **Day 7:** run the retrospective. Remove what was ignored, tighten what was ambiguous, and add nothing without evidence.
-
 
 ## Optional — materialize a named-model prompt
 

@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import sys
+import tempfile
 import unicodedata
 from pathlib import Path
 from typing import Dict, List
@@ -28,6 +30,36 @@ SECTIONS: Dict[str, List[str]] = {
     "project-state": ["Objective", "Current truth", "Decisions in force", "Risks and blockers", "Next actions", "Relevant links"],
     "workflow-review": ["Evidence reviewed", "What worked", "Friction and failures", "Keep / change / remove", "Experiment", "Success and rollback criteria"],
 }
+
+
+def absolute(path: Path) -> Path:
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+def reject_symlink_components(path: Path) -> None:
+    path = absolute(path)
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SystemExit(f"Error: note path contains a symlink component: {current}")
+        if not current.exists():
+            break
+
+
+def atomic_write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.praxis-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temporary, path)
+    except Exception:
+        try:
+            Path(temporary).unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def safe_filename(title: str) -> str:
@@ -88,7 +120,8 @@ def main() -> int:
             raise SystemExit("Error: --project-folder must be a safe path relative to the vault.")
     else:
         folder = Path(FOLDERS[args.type])
-    target = args.vault / folder / safe_filename(args.title)
+    target = absolute(args.vault) / folder / safe_filename(args.title)
+    reject_symlink_components(target)
     result = {"path": str(target), "action": "conflict" if target.exists() else "create", "dry_run": args.dry_run}
     if target.exists():
         print(json.dumps(result, indent=2))
@@ -96,8 +129,7 @@ def main() -> int:
     if args.dry_run:
         print(json.dumps(result, indent=2))
         return 0
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(render(args), encoding="utf-8")
+    atomic_write(target, render(args))
     print(json.dumps(result, indent=2))
     return 0
 

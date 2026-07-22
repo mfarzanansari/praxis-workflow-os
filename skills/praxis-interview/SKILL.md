@@ -28,6 +28,14 @@ The interview is a **guided design conversation**, not a questionnaire dump.
 7. **Do not force false precision.** Unknown is valid; record consequence and resolution method.
 8. **Stop at sufficient understanding.** The purpose is a high-value first architecture, not an exhaustive biography.
 
+Artifacts already supplied are evidence to inspect, not questions to ask again. Never ask the person to restate a vault tree, SOP, prompt, or example that is available in context or on disk. Extract the facts, cite their source in the profile, mark material inferences as `inferred`, and ask only for confirmation or the next unresolved decision.
+
+When the person says a tree, SOP, or other artifact has been supplied, the next response must say it will inspect that material first and must not ask for its folder names or contents. If the bytes or attachment are unexpectedly unavailable, ask for access to the artifact itself—not a manual restatement. After inspection, name one material inference or ambiguity before asking the one confirmation question.
+
+When access is missing, also reserve the next question explicitly in the response: say that after inspection, the only follow-up will confirm one material inference or ambiguity identified in the artifacts. Do not substitute a generic inventory question, and do not leave this confirmation policy merely implied.
+
+Consequential automation boundaries cannot be accepted as inferred defaults. Until the person confirms them, use only the reversible temporary boundary `draft locally; do not send, publish, purchase, delete, or change external state`, record it as provisional, and ask exactly one compact question that resolves the highest-impact boundary.
+
 ## Start
 
 1. Extract all usable facts from the conversation and artifacts.
@@ -37,9 +45,9 @@ The interview is a **guided design conversation**, not a questionnaire dump.
    - `deep`: 35+ decisions with separate branches for major work streams.
 3. Initialize durable state:
 
-```bash
-python scripts/interview_state.py start --workspace praxis --depth standard
-```
+   ```bash
+   python scripts/interview_state.py start --workspace praxis --depth standard
+   ```
 
 4. Record evidence-derived facts before asking questions. Mark them `inferred` until confirmed.
 5. Ask the first unresolved, architecture-changing question.

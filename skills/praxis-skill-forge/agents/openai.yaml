@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis Skill Forge"
+  short_description: "Build and evolve evidence-tested skills"
+  default_prompt: "Use $praxis-skill-forge to build or improve this skill from a baseline and evaluation evidence."

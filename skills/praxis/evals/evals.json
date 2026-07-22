@@ -5,18 +5,32 @@
       "id": 1,
       "prompt": "I have years of Obsidian notes and a handful of Claude skills. Help me build a personal agent operating system without wrecking what already works.",
       "expected_output": "Routes to interview/existing-system discovery before setup, preserves existing structure, and names approval gates.",
+      "assertions": [
+        "The response routes the next step to praxis-interview or an equivalent discovery phase before setup.",
+        "The response explicitly preserves or inspects the existing notes and skills before changing them.",
+        "The response requires approval before consequential setup or replacement."
+      ],
       "files": []
     },
     {
       "id": 2,
       "prompt": "We just finished a difficult launch. Capture whatever will help the next launch but don't dump the whole transcript into my vault.",
       "expected_output": "Routes directly to praxis-distill and applies the durable-residue threshold.",
+      "assertions": [
+        "The response routes the task to praxis-distill or explicitly applies its distillation contract.",
+        "The response rejects storing the complete transcript.",
+        "The response limits durable output to future-useful evidence, decisions, lessons, or project state."
+      ],
       "files": []
     },
     {
       "id": 3,
       "prompt": "Write a short birthday message for my colleague.",
       "expected_output": "Does not trigger Praxis.",
+      "assertions": [
+        "The response does not route the request to a Praxis lifecycle skill.",
+        "The response does not propose workflow discovery, setup, distillation, retrospective, or skill evolution."
+      ],
       "files": []
     }
   ]

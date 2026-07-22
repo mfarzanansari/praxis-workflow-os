@@ -1,0 +1,4 @@
+interface:
+  display_name: "Praxis Interview"
+  short_description: "Discover how a person actually works"
+  default_prompt: "Use $praxis-interview to interview how I work, one consequential question at a time."

@@ -22,3 +22,8 @@ All notable changes to Praxis Workflow OS are documented here. Release-specific 
 - Reject installer source/target/backup overlap, preserve existing backups, and stage replacements before changing live skills.
 - Pin GitHub Actions to full commit SHAs and isolate read-only build validation from privileged publication.
 - Bind releases to the exact current `main` commit, require successful CI for that commit, and require annotated tags.
+- Enforce LF text checkouts so byte-level manifests remain stable on Windows, macOS, and Linux.
+- Validate YAML-sensitive frontmatter scalars so standards-compliant skill discovery cannot silently omit a bundled skill.
+- Reject symlinked or unexpected release inputs, make multi-file forced writes recoverable, validate setup-ready profiles, and bind setup to a content-hashed blueprint approval record.
+- Add native Codex plugin metadata, per-skill UI metadata, objective eval assertions, and balanced near-miss trigger suites.
+- Publish release assets through a serialized, exact-asset draft before GitHub locks the immutable release.

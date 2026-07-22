@@ -5,18 +5,33 @@
       "id": 1,
       "prompt": "Save everything from this 90-minute agent session into Memory so we never lose it.",
       "expected_output": "Rejects transcript dumping, identifies only future-useful candidates, and permits creating no note.",
+      "assertions": [
+        "The response explicitly rejects saving the complete session as durable memory.",
+        "The response applies a future-usefulness threshold to candidate notes.",
+        "The response allows the correct outcome to be no durable note."
+      ],
       "files": []
     },
     {
       "id": 2,
       "prompt": "We chose Supabase over Firebase for a client project after comparing auth, RLS, and team experience. Capture it.",
       "expected_output": "Creates a decision-record contract with alternatives, rationale, consequences, evidence, and review/reversal conditions.",
+      "assertions": [
+        "The response classifies the item as a decision record rather than timeless memory.",
+        "The proposed record includes Supabase, Firebase, rationale, and supporting evidence or provenance.",
+        "The proposed record includes consequences and a review, reversal, or expiry condition."
+      ],
       "files": []
     },
     {
       "id": 3,
       "prompt": "The current API price is $X. Put it in permanent memory.",
       "expected_output": "Treats the price as time-sensitive research/project data with provenance and review date, not timeless memory.",
+      "assertions": [
+        "The response does not classify the current price as permanent or timeless memory.",
+        "The response requires a source and freshness or retrieval date.",
+        "The response includes a review or expiry condition for the price."
+      ],
       "files": []
     }
   ]

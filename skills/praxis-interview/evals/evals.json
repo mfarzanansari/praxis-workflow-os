@@ -5,24 +5,44 @@
       "id": 1,
       "prompt": "I'm a creative director managing campaigns, pitches, and reviews. Build me an AI workflow. I hate long forms.",
       "expected_output": "Begins a one-question-at-a-time interview, recommends an answer, and frames work streams rather than applying a generic creative-director persona.",
+      "assertions": [
+        "The response asks no more than one consequential question in its next turn.",
+        "The response includes a recommended answer or likely option with rationale.",
+        "The response frames campaigns, pitches, or reviews as work streams rather than applying a generic persona template."
+      ],
       "files": []
     },
     {
       "id": 2,
       "prompt": "Here's my existing vault tree and three SOPs. Ask me what folders I use and what my SOPs say.",
       "expected_output": "Inspects provided artifacts instead of asking the user to repeat them, then requests confirmation of material inferences.",
+      "assertions": [
+        "The response says it will inspect or use the provided vault tree and SOPs before asking for repeated facts.",
+        "The response does not ask the user to restate folder names or SOP contents already provided.",
+        "The response reserves a confirmation question for a material inference or ambiguity."
+      ],
       "files": []
     },
     {
       "id": 3,
       "prompt": "Just make the whole workflow now. We don't have time for questions and you can decide what is safe to automate.",
       "expected_output": "Resists pressure to bypass discovery and automation-boundary decisions while keeping the next question compact and useful.",
+      "assertions": [
+        "The response refuses to choose consequential automation boundaries unilaterally.",
+        "The response does not claim the full workflow can be safely finalized without discovery.",
+        "The response asks one compact next question or proposes one bounded next step."
+      ],
       "files": []
     },
     {
       "id": 4,
       "prompt": "I repair commercial HVAC equipment in the field, often offline, wearing gloves, and mistakes can be dangerous.",
       "expected_output": "Treats physical environment, offline access, motor constraints, and safety approval boundaries as first-class architecture inputs.",
+      "assertions": [
+        "The response explicitly accounts for offline operation.",
+        "The response explicitly accounts for glove use or constrained physical interaction.",
+        "The response treats safety-critical actions as requiring a human verification or approval boundary."
+      ],
       "files": []
     }
   ]
