@@ -69,7 +69,23 @@ def source_files(root: Path) -> Iterable[Path]:
                 "untracked release file(s) found; add, ignore, or remove them first: "
                 + ", ".join(sorted(unexpected))
             )
-    for path in sorted(root.rglob("*")):
+        tracked = subprocess.run(  # nosec B603
+            [git, "-C", str(root), "ls-files", "-z"],
+            check=True,
+            capture_output=True,
+        )
+        candidates = []
+        for raw in tracked.stdout.split(b"\0"):
+            if not raw:
+                continue
+            rel = Path(raw.decode("utf-8", errors="strict"))
+            path = root / rel
+            if not path.exists() and not path.is_symlink():
+                raise ValueError(f"tracked release file is missing: {rel.as_posix()}")
+            candidates.append(path)
+    else:
+        candidates = root.rglob("*")
+    for path in sorted(candidates):
         rel = path.relative_to(root)
         if any(part in EXCLUDED_PARTS for part in rel.parts):
             continue

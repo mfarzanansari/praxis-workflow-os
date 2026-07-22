@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -415,6 +416,42 @@ class PraxisScriptTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("untracked release file", result.stderr)
             self.assertFalse(dist.exists())
+
+    def test_release_tools_exclude_gitignored_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "source"
+            source.mkdir()
+            subprocess.run(["git", "init", "-q", str(source)], check=True)
+            (source / ".gitignore").write_text(".tmp/\n", encoding="utf-8")
+            (source / "VERSION").write_text("1.0.0\n", encoding="utf-8")
+            (source / "tracked.txt").write_text("tracked\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(source), "add", ".gitignore", "VERSION", "tracked.txt"],
+                check=True,
+            )
+            private = source / ".tmp/private.txt"
+            private.parent.mkdir()
+            private.write_text("must not ship\n", encoding="utf-8")
+
+            manifest = source / "MANIFEST.sha256"
+            run(
+                "scripts/build_manifest.py", "--root", str(source),
+                "--output", str(manifest),
+            )
+            self.assertNotIn(".tmp", manifest.read_text(encoding="utf-8"))
+            subprocess.run(
+                ["git", "-C", str(source), "add", "MANIFEST.sha256"],
+                check=True,
+            )
+
+            dist = root / "dist"
+            run(
+                "scripts/build_release.py", "--root", str(source),
+                "--dist", str(dist), "--clean",
+            )
+            with zipfile.ZipFile(dist / "praxis-workflow-os-v1.0.0.zip") as archive:
+                self.assertFalse(any("/.tmp/" in name for name in archive.namelist()))
 
     def test_manifest_valid(self) -> None:
         result = run("scripts/build_manifest.py", "--check")

@@ -51,9 +51,36 @@ def reject_untracked_release_files(root: Path) -> None:
         )
 
 
+def git_tracked_files(root: Path) -> list[Path]:
+    """Return only files present in Git's index, excluding ignored local residue."""
+    git = shutil.which("git")
+    if git is None:
+        raise RuntimeError("git is required to enumerate release files")
+    result = subprocess.run(  # nosec B603
+        [git, "-C", str(root), "ls-files", "-z"],
+        check=True,
+        capture_output=True,
+    )
+    paths = []
+    for raw in result.stdout.split(b"\0"):
+        if not raw:
+            continue
+        rel = Path(raw.decode("utf-8", errors="strict"))
+        if excluded(rel):
+            continue
+        path = root / rel
+        if path.is_symlink():
+            raise ValueError(f"refusing symlink in release source: {rel.as_posix()}")
+        if not path.is_file():
+            raise ValueError(f"tracked release file is missing: {rel.as_posix()}")
+        paths.append(path)
+    return paths
+
+
 def entries(root: Path):
     reject_untracked_release_files(root)
-    for path in sorted(root.rglob("*")):
+    candidates = git_tracked_files(root) if (root / ".git").exists() else root.rglob("*")
+    for path in sorted(candidates):
         rel = path.relative_to(root)
         if excluded(rel):
             continue
