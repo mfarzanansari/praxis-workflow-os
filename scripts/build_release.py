@@ -85,7 +85,7 @@ def source_files(root: Path) -> Iterable[Path]:
             candidates.append(path)
     else:
         candidates = root.rglob("*")
-    for path in sorted(candidates):
+    for path in sorted(candidates, key=lambda value: value.relative_to(root).as_posix()):
         rel = path.relative_to(root)
         if any(part in EXCLUDED_PARTS for part in rel.parts):
             continue

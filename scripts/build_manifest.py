@@ -94,7 +94,7 @@ def entries(root: Path):
     reject_untracked_release_files(root)
     git_checkout = (root / ".git").exists()
     candidates = git_tracked_files(root) if git_checkout else root.rglob("*")
-    for path in sorted(candidates):
+    for path in sorted(candidates, key=lambda value: value.relative_to(root).as_posix()):
         rel = path.relative_to(root)
         if excluded(rel):
             continue
