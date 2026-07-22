@@ -43,7 +43,7 @@ def reject_symlink_components(path: Path, label: str) -> None:
     current = Path(path.anchor)
     for part in path.parts[1:]:
         current /= part
-        if current.is_symlink():
+        if current.is_symlink() and current.parent != Path(path.anchor):
             raise SystemExit(f"Error: {label} contains a symlink component: {current}")
         if not current.exists():
             break

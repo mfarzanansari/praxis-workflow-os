@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import stat
@@ -120,7 +121,7 @@ def validate(skill_dir: Path) -> Dict[str, object]:
                 if "subprocess" in content or "os.system" in content:
                     warnings.append(f"process execution requires explicit review: {script.relative_to(skill_dir)}")
         mode = script.stat().st_mode
-        if script.suffix in {".sh", ".py"} and not (mode & stat.S_IXUSR):
+        if os.name != "nt" and script.suffix in {".sh", ".py"} and not (mode & stat.S_IXUSR):
             warnings.append(f"script is not executable for owner: {script.relative_to(skill_dir)}")
 
     agent_metadata = skill_dir / "agents/openai.yaml"

@@ -77,9 +77,23 @@ def git_tracked_files(root: Path) -> list[Path]:
     return paths
 
 
+def git_index_bytes(root: Path, rel: Path) -> bytes:
+    """Read canonical index bytes so checkout line-ending policy cannot change hashes."""
+    git = shutil.which("git")
+    if git is None:
+        raise RuntimeError("git is required to read canonical release bytes")
+    result = subprocess.run(  # nosec B603
+        [git, "-C", str(root), "show", f":{rel.as_posix()}"],
+        check=True,
+        capture_output=True,
+    )
+    return result.stdout
+
+
 def entries(root: Path):
     reject_untracked_release_files(root)
-    candidates = git_tracked_files(root) if (root / ".git").exists() else root.rglob("*")
+    git_checkout = (root / ".git").exists()
+    candidates = git_tracked_files(root) if git_checkout else root.rglob("*")
     for path in sorted(candidates):
         rel = path.relative_to(root)
         if excluded(rel):
@@ -88,7 +102,8 @@ def entries(root: Path):
             raise ValueError(f"refusing symlink in release source: {rel.as_posix()}")
         if not path.is_file():
             continue
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        content = git_index_bytes(root, rel) if git_checkout else path.read_bytes()
+        digest = hashlib.sha256(content).hexdigest()
         yield digest, rel.as_posix()
 
 
@@ -101,7 +116,7 @@ def reject_symlink_components(path: Path) -> None:
     current = Path(path.anchor)
     for part in path.parts[1:]:
         current /= part
-        if current.is_symlink():
+        if current.is_symlink() and current.parent != Path(path.anchor):
             raise ValueError(f"manifest output contains a symlink component: {current}")
         if not current.exists():
             break
